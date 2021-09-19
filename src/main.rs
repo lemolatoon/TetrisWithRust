@@ -124,9 +124,12 @@ impl Application for Lienzo {
         .on_press(Message::Exit);
 
 
-        let canvas: Canvas<Message, Circulo> = Canvas::new(Circulo::default())
-            .width(Length::Units(512))
-            .height(Length::Units(350));
+        let mut grid = Grid::default();
+        grid.colors[0][0] = 1;
+        grid.colors[0][2] = 2;
+        let canvas: Canvas<Message, Grid> = Canvas::new(grid)
+            .width(Length::Units(768))
+            .height(Length::Units(525));
 
 
         //縦に積み重ねる
@@ -138,6 +141,7 @@ impl Application for Lienzo {
             .push(exit);
 
         let content = Row::new()
+            .align_items(Align::Center)
             .push(canvas)
             .push(explanation);
 
@@ -172,34 +176,55 @@ struct Grid {
     colors: Vec<Vec<usize>>, //row * column ; 列Vec<行Vec<>>
 }
 
+impl<Message> canvas::Program<Message> for Grid {
+    fn draw(&self, bounds: Rectangle, cursor: canvas::Cursor) -> Vec<canvas::Geometry> {
+        let mut frame = Frame::new(bounds.size());
+
+        // let width = self.square_size * colors
+        let pos = Point {x: 0.0, y: 0.0};
+        for i in 0..self.colors.len() {
+            for j in 0..self.colors[0].len() {
+            }
+            println!("{:?}", self.colors[i]);
+        }
+        frame = self.draw(frame, pos);
+
+        vec![frame.into_geometry()]
+    }
+}
+
 
 impl Grid {
-    const COLOR_I: Color = Color::from_rgb8(0, 255, 255);
-    const COLOR_O: Color = Color::from_rgb8(255, 255, 0);
-    const COLOR_L: Color = Color::from_rgb8(255, 165, 0);
-    const COLOR_J: Color = Color::from_rgb8(0, 0, 255);
-    const COLOR_S: Color = Color::from_rgb8(0, 255, 0);
-    const COLOR_Z: Color = Color::from_rgb8(255, 0, 0);
-    const COLOR_T: Color = Color::from_rgb8(155, 48, 255);
+    const COLOR_I: Color = Color {r: 0.0, g: 255.0, b: 255.0, a: 1.0};
+    const COLOR_O: Color = Color {r: 255.0, g: 255.0, b: 0.0, a: 1.0};
+    const COLOR_L: Color = Color {r: 255.0, g: 165.0, b: 0.0, a: 1.0};
+    const COLOR_J: Color = Color {r: 0.0, g: 0.0, b: 255.0, a: 1.0};
+    const COLOR_S: Color = Color {r: 0.0, g: 255.0, b: 0.0, a: 1.0};
+    const COLOR_Z: Color = Color {r: 255.0, g: 0.0, b: 0.0, a: 1.0};
+    const COLOR_T: Color = Color {r: 155.0, g: 48.0, b: 0.0, a: 1.0};
 
-    const COLOR_BACK: Color = Color::from_rgb8(181, 181, 181);
+    const COLOR_BACK: Color = Color {r: 181.0, g: 181.0, b: 181.0, a: 1.0};
 
-    pub fn draw(&self, frame: Frame, point: Point) -> Frame {
-        let x = 0.0 as f32;
-        let y = 0.0 as f32;
+    pub fn draw(&self, mut frame: Frame, point: Point) -> Frame {
+        let mut x = 0.0 as f32;
+        let mut y = 0.0 as f32;
 
-        for row_c in &self.colors[..] { //行の数forがまわる
-            for c in &row_c[..] { //列の数forがまわる
+        for column_c in &self.colors[..] { //列xの数forがまわる
+            y = 0.0 as f32;
+            for c in &column_c[..] { //行yの数forがまわる
                 let pos_back = Point {x:x, y: y};
                 let size_back = Size {width: self.square_size, height: self.square_size};
                 let square_back = canvas::Path::rectangle(pos_back, size_back);
                 frame.fill(&square_back, Self::COLOR_BACK);
 
-                let pos = Point {x: x - 1.0, y: y - 1.0};
+                let pos = Point {x: x + 1.0, y: y - 1.0};
                 let size = Size {width: self.square_size - 1.0, height: self.square_size - 1.0};
                 let square = canvas::Path::rectangle(pos, size);
-                frame.fill(&square , Self::get_color(c));
+                frame.fill(&square , Self::get_color(*c));
+
+                y += self.square_size;
             }
+            x += self.square_size;
         }
 
         frame
@@ -207,7 +232,7 @@ impl Grid {
 
     fn get_color(i: usize) -> Color {
         return if i == 0 {
-            Color::from_rgb8(176, 226, 255)
+            Color::from_rgb8(232, 232, 232)
         } else if i == 1 {
             Self::COLOR_I
         } else if i == 2 {
@@ -230,10 +255,12 @@ impl Grid {
 
 impl std::default::Default for Grid {
     fn default() -> Self {
-        let colors =  Vec::with_capacity(20);
-        for color in colors {
-            let row:Vec<usize> = Vec::with_capacity(10);
-            for i in 0..10 {
+        let column_num = 20;
+        let row_num = 10;
+        let mut colors =  Vec::with_capacity(column_num);
+        for _ in 0..row_num {
+            let mut row: Vec<usize> = Vec::with_capacity(row_num);
+            for _ in 0..column_num {
                 row.push(0);
             }
             colors.push(row);
