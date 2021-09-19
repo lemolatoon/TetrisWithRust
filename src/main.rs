@@ -1,6 +1,7 @@
 mod tetris_core;
 
 use iced::{Align, Application, Button, Canvas, Checkbox, Clipboard, Color, Column, Command, Container, Element, HorizontalAlignment, Length, Point, Rectangle, Row, Settings, Size, Text, button, canvas::{self, Frame}, executor, keyboard};
+use iced_native;
 
 pub fn main() {
     Lienzo::run(Settings {
@@ -47,6 +48,12 @@ impl Application for Lienzo {
     fn update(&mut self, message: Message, _clipboard: &mut Clipboard) -> Command<Message> {
         match message {
             Message::EventOccurred(event) if self.enabled => {
+                match event {
+                    iced_native::event::Event::Keyboard(keyboard::Event::CharacterReceived('j')) => {
+                        println!("Jdayo");
+                    }
+                    _ => {}
+                }
                 self.last.push(event); //eventを表示するためのやつ
 
                 if self.last.len() > 5 {
