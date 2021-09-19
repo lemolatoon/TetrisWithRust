@@ -1,4 +1,4 @@
-// use teris_core;
+mod tetris_core;
 
 use iced::{Align, Application, Button, Canvas, Checkbox, Clipboard, Color, Column, Command, Container, Element, HorizontalAlignment, Length, Point, Rectangle, Row, Settings, Size, Text, button, canvas::{self, Frame}, executor, keyboard};
 
@@ -113,8 +113,8 @@ impl Application for Lienzo {
 
 
         let mut grid = Grid::default();
-        grid.colors[0][0] = 1;
-        grid.colors[0][2] = 2;
+        grid.colors[0][5] = 1;
+        grid.colors[0][7] = 2;
         let canvas: Canvas<Message, Grid> = Canvas::new(grid)
             .width(Length::Units(768))
             .height(Length::Units(525));
@@ -162,16 +162,12 @@ struct Grid {
 }
 
 impl<Message> canvas::Program<Message> for Grid {
-    fn draw(&self, bounds: Rectangle, cursor: canvas::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(&self, bounds: Rectangle, _cursor: canvas::Cursor) -> Vec<canvas::Geometry> {
         let mut frame = Frame::new(bounds.size());
 
-        // let width = self.square_size * colors
-        let pos = Point {x: 0.0, y: 0.0};
-        for i in 0..self.colors.len() {
-            for j in 0..self.colors[0].len() {
-            }
-            println!("{:?}", self.colors[i]);
-        }
+        let width = self.square_size * self.colors.len() as f32; //横の長さ 10
+        let height = self.square_size * self.colors[0].len() as f32;  //縦の長さ 20
+        let pos = Point {x: (frame.width() - width) / 2.0, y: (frame.height() - height) / 2.0};
         frame = self.draw(frame, pos);
 
         vec![frame.into_geometry()]
@@ -191,12 +187,17 @@ impl Grid {
     const COLOR_BACK: Color = Color {r: 181.0, g: 181.0, b: 181.0, a: 1.0};
 
     pub fn draw(&self, mut frame: Frame, point: Point) -> Frame {
-        let mut x = 0.0 as f32;
-        let mut y = 0.0 as f32;
+        let mut x = point.x;
+        let mut y;
 
-        for column_c in &self.colors[..] { //列xの数forがまわる
-            y = 0.0 as f32;
-            for c in &column_c[..] { //行yの数forがまわる
+        let len = self.colors[0].len();
+        for column_c in self.colors.iter() { //列xの数forがまわる
+            y = point.y;
+            for (j, c) in (0..).zip(column_c.iter()) { //行yの数forがまわる
+                if len - j > 20 { //20以上は描画しない index+5から開始
+                    continue;
+                }
+
                 let pos_back = Point {x:x, y: y};
                 let size_back = Size {width: self.square_size, height: self.square_size};
                 let square_back = canvas::Path::rectangle(pos_back, size_back);
@@ -240,7 +241,7 @@ impl Grid {
 
 impl std::default::Default for Grid {
     fn default() -> Self {
-        let column_num = 20;
+        let column_num = 25; //20まで見える
         let row_num = 10;
         let mut colors =  Vec::with_capacity(column_num);
         for _ in 0..row_num {
