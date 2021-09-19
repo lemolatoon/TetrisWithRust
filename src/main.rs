@@ -130,11 +130,9 @@ impl Application for Lienzo {
         .on_press(Message::Exit);
 
 
-        /*
         let canvas = Canvas::new(self)
             .width(Length::Fill)
             .height(Length::Fill);
-        */
 
 
         let content = Column::new()
