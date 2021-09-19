@@ -93,10 +93,11 @@ pub mod mino {
 
     impl Default for I {
         fn default() -> Self {
-        Self { state: State::State0, position: Point {x: 0.0, y: 0.0}}
-    }
+        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        }
     }
 
+    #[derive(Debug)]
     struct J {
         pub state: State,
         position: Point,
@@ -133,6 +134,13 @@ pub mod mino {
                                          [0, 0, 0, 0]];
     }
 
+    impl Default for J {
+        fn default() -> Self {
+        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        }
+    }
+
+    #[derive(Debug)]
     struct L {
         pub state: State,
         position: Point,
@@ -159,15 +167,22 @@ pub mod mino {
 
         const SHAPE2: [[usize; 4]; 4] = [[0, 0, 0, 0],
                                          [3, 3, 3, 0], 
-                                         [0, 0, 3, 0],
+                                         [3, 0, 0, 0],
                                          [0, 0, 0, 0]];
 
-        const SHAPE3: [[usize; 4]; 4] = [[0, 3, 0, 0],
+        const SHAPE3: [[usize; 4]; 4] = [[3, 3, 0, 0],
                                          [0, 3, 0, 0], 
-                                         [3, 3, 0, 0],
+                                         [0, 3, 0, 0],
                                          [0, 0, 0, 0]];
     }
 
+    impl Default for L {
+        fn default() -> Self {
+        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        }
+    }
+
+    #[derive(Debug)]
     struct O {
         pub state: State,
         position: Point,
@@ -182,27 +197,34 @@ pub mod mino {
             &self.state
         }
 
-        const SHAPE0: [[usize; 4]; 4] = [[4, 4, 0, 0],
-                                         [4, 4, 0, 0], 
+        const SHAPE0: [[usize; 4]; 4] = [[0, 4, 4, 0], // when init, setting center will useful
+                                         [0, 4, 4, 0], 
                                          [0, 0, 0, 0],
                                          [0, 0, 0, 0]];
 
-        const SHAPE1: [[usize; 4]; 4] = [[4, 4, 0, 0],
-                                         [4, 4, 0, 0], 
+        const SHAPE1: [[usize; 4]; 4] = [[0, 4, 4, 0],
+                                         [0, 4, 4, 0], 
                                          [0, 0, 0, 0],
                                          [0, 0, 0, 0]];
 
-        const SHAPE2: [[usize; 4]; 4] = [[4, 4, 0, 0],
-                                         [4, 4, 0, 0], 
+        const SHAPE2: [[usize; 4]; 4] = [[0, 4, 4, 0],
+                                         [0, 4, 4, 0], 
                                          [0, 0, 0, 0],
                                          [0, 0, 0, 0]];
 
-        const SHAPE3: [[usize; 4]; 4] = [[4, 4, 0, 0],
-                                         [4, 4, 0, 0], 
+        const SHAPE3: [[usize; 4]; 4] = [[0, 4, 4, 0],
+                                         [0, 4, 4, 0], 
                                          [0, 0, 0, 0],
                                          [0, 0, 0, 0]];
     }
 
+    impl Default for O {
+        fn default() -> Self {
+        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        }
+    }
+
+    #[derive(Debug)]
     struct S {
         pub state: State,
         position: Point,
@@ -239,6 +261,13 @@ pub mod mino {
 
     }
 
+    impl Default for S {
+        fn default() -> Self {
+        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        }
+    }
+
+    #[derive(Debug)]
     struct T {
         pub state: State,
         position: Point,
@@ -275,6 +304,13 @@ pub mod mino {
 
     }
 
+    impl Default for T {
+        fn default() -> Self {
+        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        }
+    }
+
+    #[derive(Debug)]
     struct Z {
         pub state: State,
         position: Point,
@@ -309,5 +345,11 @@ pub mod mino {
                                          [7, 0, 0, 0],
                                          [0, 0, 0, 0]];
 
+    }
+
+    impl Default for Z {
+        fn default() -> Self {
+        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        }
     }
 }
