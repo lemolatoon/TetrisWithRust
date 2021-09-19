@@ -1,4 +1,5 @@
-//! This example showcases an interactive `Canvas` for drawing Bezier curves.
+// use teris_core;
+
 use iced::{Align, Application, Button, Canvas, Checkbox, Clipboard, Color, Column, Command, Container, Element, HorizontalAlignment, Length, Point, Rectangle, Row, Settings, Size, Text, button, canvas::{self, Frame}, executor, keyboard};
 
 pub fn main() {
@@ -73,19 +74,6 @@ impl Application for Lienzo {
             }
 
         }
-
-
-        /*
-        let rect = self.rectangle.draw(Size {width: 1024.0, height: 700.0}, |frame| {
-            println!("frame.width: {}, frame.height: {}", frame.width(), frame.height());
-            // width: 1024, height: 700
-            let cir = canvas::Path::circle(frame.center(), self.circulo.radius);
-
-            frame.fill(&cir, Color::from_rgb8(0xF9, 0xD7, 0x1C));
-        });
-        */
-
-
         Command::none()
     }
 
@@ -167,10 +155,7 @@ impl std::default::Default for Circulo {
     }
 }
 
-struct Square {
-    size: Size,
-}
-
+#[derive(Debug)]
 struct Grid {
     square_size: f32,
     colors: Vec<Vec<usize>>, //row * column ; 列Vec<行Vec<>>
@@ -271,60 +256,4 @@ impl std::default::Default for Grid {
             colors: colors,
         }
     }
-}
-
-impl Square {
-    pub fn new(width: f32) -> Self {
-        Self {size: Size {width: width, height: width}}
-    }
-}
-
-impl std::default::Default for Square {
-    fn default() -> Self {
-        Self::new(50.0)
-    }
-}
-
-impl<Message> canvas::Program<Message> for Circulo {
-    fn draw(&self, bounds: Rectangle, _cursor: canvas::Cursor) -> Vec<canvas::Geometry> {
-        println!("{:?}", bounds);
-
-        // prepare new frame
-        let mut frame = Frame::new(bounds.size());
-
-        println!("frame.width: {}, frame.height: {}", frame.width(), frame.height());
-        // width: 1024, height: 700
-        let cir = canvas::Path::circle(frame.center(), self.radius);
-
-        frame.fill(&cir, Color::from_rgb8(0xF9, 0xD7, 0x1C));
-
-
-        let square_width = 50.0; //squareの大きさ
-        let square_height = 50.0;
-        let mut x = 0.0 as f32; //square の左上の座標x
-        let mut y = 0.0 as f32; //square の左上の座標y
-        let mut counter = 1 as usize; //色を変えるためのカウンタ
-        while x + square_width <= frame.width() {
-            y = 0.0 as f32;
-            while y + square_height <= frame.height() {
-                let pos = Point {x: x, y: y};
-                let size = Size {width: self.radius, height: self.radius}; // 半径と同じ長さの正方形
-                let rect = canvas::Path::rectangle(pos, size);
-
-                let b = (16 * counter % 256) as u8;
-                frame.fill(&rect, Color::from_rgb8(0x00, 0x00, b));
-                counter += 1;
-                println!("counter is {}, pos = ({}, {})", counter, x, y);
-                y += square_height;
-            }
-            x += square_width;
-        }
-        let rect = canvas::Path::rectangle(frame.center(), Size {width: 50.0, height: 50.0});
-
-        frame.fill(&rect, Color::from_rgb8(0x00, 0xD7, 0x2C));
-
-
-        vec![frame.into_geometry()]
-        }
-
 }
