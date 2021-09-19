@@ -22,7 +22,6 @@ pub struct Lienzo {
 #[derive(Debug, Clone)]
 pub enum Message {
     EventOccurred(iced_native::Event),
-    KeyEventOccurred(keyboard::Event),
     Toggled(bool),
     Exit,
 }
@@ -57,13 +56,6 @@ impl Application for Lienzo {
             Message::EventOccurred(event) => { //when not enabled
                 if let iced_native::Event::Window(iced_native::window::Event::CloseRequested) = event {
                     self.should_exit = true;
-                }
-            }
-            Message::KeyEventOccurred(event) => { //TODO : check its necessariness
-                self.last.push(iced_native::Event::Keyboard(event));
-
-                if self.last.len() > 5 {
-                    let _ = self.last.remove(0);
                 }
             }
             Message::Toggled(enabled) => {
@@ -190,14 +182,9 @@ impl Grid {
         let mut x = point.x;
         let mut y;
 
-        let len = self.colors[0].len();
         for column_c in self.colors.iter() { //列xの数forがまわる
             y = point.y;
-            for (j, c) in (0..).zip(column_c.iter()) { //行yの数forがまわる
-                if len - j > 20 { //20以上は描画しない index+5から開始
-                    continue;
-                }
-
+            for c in column_c.iter() { //行yの数forがまわる
                 let pos_back = Point {x:x, y: y};
                 let size_back = Size {width: self.square_size, height: self.square_size};
                 let square_back = canvas::Path::rectangle(pos_back, size_back);
@@ -241,7 +228,7 @@ impl Grid {
 
 impl std::default::Default for Grid {
     fn default() -> Self {
-        let column_num = 25; //20まで見える
+        let column_num = 20; //20まで見える
         let row_num = 10;
         let mut colors =  Vec::with_capacity(column_num);
         for _ in 0..row_num {
