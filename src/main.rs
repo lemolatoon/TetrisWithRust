@@ -272,6 +272,7 @@ impl Grid {
             for j in 0..4 { //行yの数forがまわる
                 let c = shape[i][j];
                 if c == 0 { //minoでないマスは書かない
+                    x += self.square_size; // TがJになるbugの修正
                     continue;
                 }
                 let pos_back ;

@@ -2,7 +2,7 @@ pub mod mino {
     use iced::Point;
     use std::default::Default;
 
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq)]
     pub enum State {
         State0,
         State1,
@@ -83,7 +83,7 @@ pub mod mino {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq)]
     pub struct I {
         pub state: State,
         position: Point, //the position in tetris board
@@ -134,7 +134,7 @@ pub mod mino {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq)]
     pub struct J {
         pub state: State,
         position: Point,
@@ -183,7 +183,7 @@ pub mod mino {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq)]
     pub struct L {
         pub state: State,
         position: Point,
@@ -231,7 +231,7 @@ pub mod mino {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq)]
     pub struct O {
         pub state: State,
         position: Point,
@@ -279,7 +279,7 @@ pub mod mino {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq)]
     pub struct S {
         pub state: State,
         position: Point,
@@ -327,7 +327,7 @@ pub mod mino {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq)]
     pub struct T {
         pub state: State,
         position: Point,
@@ -373,11 +373,11 @@ pub mod mino {
 
     impl Default for T {
         fn default() -> Self {
-            Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
+            Self { state: State::State0, position: Point {x: 3.0, y: 1.0}}
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, PartialEq)]
     pub struct Z {
         pub state: State,
         position: Point,
@@ -423,5 +423,37 @@ pub mod mino {
         fn default() -> Self {
         Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::mino::*;
+
+    #[test]
+    fn rotate() {
+        let m1 = get_default_mino("L");
+        assert!(match m1 {
+            Minos::MinoL(mino) => {
+                true
+            },
+            _ => false,
+        });
+
+        let m1 = get_default_mino("L");
+        let mut m2 = L::default();
+        let mut m3 = match m1 {
+            Minos::MinoL(mino) => mino,
+            _ => panic!("illegal"),
+        };
+
+        for _ in 0..4 {
+            m2.rotate_left();
+        }
+        m3.rotate_left();
+        m3.rotate_right();
+        assert_eq!(m2, m3);
+
     }
 }
