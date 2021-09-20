@@ -21,6 +21,7 @@ pub struct Lienzo {
     exit: button::State,
     enabled: bool,
     should_exit: bool,
+    grid: Grid,
 }
 
 
@@ -81,6 +82,9 @@ impl Application for Lienzo {
             }
 
         }
+
+        mino::update(&self.grid.colors);
+
         Command::none()
     }
 
@@ -119,11 +123,11 @@ impl Application for Lienzo {
         .on_press(Message::Exit);
 
 
-        let mut grid = Grid::default();
-        grid.colors[0][5] = 1;
-        grid.colors[0][7] = 2;
-        grid.set_mino(Some(mino::get_default_mino("T")));
-        let canvas: Canvas<Message, Grid> = Canvas::new(grid)
+        self.grid.colors[0][5] = 1;
+        self.grid.colors[0][7] = 2;
+        self.grid.set_mino(Some(mino::get_default_mino("T")));
+        // clone しないと,selfの変数は所有権のせいでmoveできない
+        let canvas: Canvas<Message, Grid> = Canvas::new(self.grid.clone())
             .width(Length::Units(768))
             .height(Length::Units(525));
 
@@ -163,7 +167,7 @@ impl std::default::Default for Circulo {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Grid {
     square_size: f32,
     colors: Vec<Vec<usize>>, //row * column ; 列Vec<行Vec<>>

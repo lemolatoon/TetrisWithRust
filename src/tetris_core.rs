@@ -2,7 +2,7 @@ pub mod mino {
     use iced::Point;
     use std::default::Default;
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     pub enum State {
         State0,
         State1,
@@ -17,7 +17,7 @@ pub mod mino {
         const SHAPE3: [[usize; 4]; 4];
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub enum Minos {
         MinoI(I),
         MinoJ(J),
@@ -39,6 +39,10 @@ pub mod mino {
             "Z" => Minos::MinoZ(Z::default()),
             _ => panic!("illegal name for Minos at `get_default_mino`"),
         }
+    }
+
+    pub fn update(board: &Vec<Vec<usize>>) {
+
     }
 
     pub trait Mino {
@@ -83,7 +87,7 @@ pub mod mino {
         }
     }
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     pub struct I {
         pub state: State,
         position: Point, //the position in tetris board
@@ -134,7 +138,7 @@ pub mod mino {
         }
     }
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     pub struct J {
         pub state: State,
         position: Point,
@@ -183,7 +187,7 @@ pub mod mino {
         }
     }
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     pub struct L {
         pub state: State,
         position: Point,
@@ -231,7 +235,7 @@ pub mod mino {
         }
     }
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     pub struct O {
         pub state: State,
         position: Point,
@@ -279,7 +283,7 @@ pub mod mino {
         }
     }
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     pub struct S {
         pub state: State,
         position: Point,
@@ -327,7 +331,7 @@ pub mod mino {
         }
     }
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     pub struct T {
         pub state: State,
         position: Point,
@@ -373,11 +377,11 @@ pub mod mino {
 
     impl Default for T {
         fn default() -> Self {
-            Self { state: State::State0, position: Point {x: 3.0, y: 1.0}}
+            Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
         }
     }
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, PartialEq, Clone)]
     pub struct Z {
         pub state: State,
         position: Point,
