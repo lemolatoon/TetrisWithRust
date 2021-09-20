@@ -122,7 +122,7 @@ impl Application for Lienzo {
         let mut grid = Grid::default();
         grid.colors[0][5] = 1;
         grid.colors[0][7] = 2;
-        grid.set_mino(Some(mino::get_default_mino("J")));
+        grid.set_mino(Some(mino::get_default_mino("T")));
         let canvas: Canvas<Message, Grid> = Canvas::new(grid)
             .width(Length::Units(768))
             .height(Length::Units(525));
@@ -192,14 +192,14 @@ impl<Message> canvas::Program<Message> for Grid {
 }
 
 
-impl Grid {
-    const COLOR_I: Color = Color {r: 0.0, g: 255.0, b: 255.0, a: 1.0};
-    const COLOR_O: Color = Color {r: 255.0, g: 255.0, b: 0.0, a: 1.0};
-    const COLOR_L: Color = Color {r: 255.0, g: 165.0, b: 0.0, a: 1.0};
-    const COLOR_J: Color = Color {r: 0.0, g: 0.0, b: 255.0, a: 1.0};
-    const COLOR_S: Color = Color {r: 0.0, g: 255.0, b: 0.0, a: 1.0};
-    const COLOR_Z: Color = Color {r: 255.0, g: 0.0, b: 0.0, a: 1.0};
-    const COLOR_T: Color = Color {r: 155.0, g: 48.0, b: 0.0, a: 1.0};
+impl Grid { 
+    const COLOR_I: Color = Color {r: 0.0 / 255.0, g: 255.0 / 255.0, b: 255.0 / 255.0, a: 1.0}; // / 255.0
+    const COLOR_O: Color = Color {r: 255.0 / 255.0, g: 255.0 / 255.0, b: 0.0 / 255.0, a: 1.0};
+    const COLOR_L: Color = Color {r: 243.0 / 255.0, g: 152.0 / 255.0, b: 0.0 / 255.0, a: 1.0};
+    const COLOR_J: Color = Color {r: 0.0 / 255.0, g: 0.0 / 255.0, b: 255.0 / 255.0, a: 1.0};
+    const COLOR_S: Color = Color {r: 0.0 / 255.0, g: 255.0 / 255.0, b: 0.0 / 255.0, a: 1.0};
+    const COLOR_Z: Color = Color {r: 255.0 / 255.0, g: 0.0 / 255.0, b: 0.0 / 255.0, a: 1.0};
+    const COLOR_T: Color = Color {r: 148.0 / 255.0, g: 87.0 / 255.0, b: 164.0 / 255.0, a: 1.0};
 
     const COLOR_BACK: Color = Color {r: 181.0, g: 181.0, b: 181.0, a: 1.0};
 
@@ -278,9 +278,7 @@ impl Grid {
                 let size_back;
                 let pos;
                 let size;
-                println!("startpoint.y: {}, i: {}, {}", start_point.y, i, start_point.y + (i as f32));
                 if start_point.y + (i as f32) == 0.0 { //一番上の段の場合半分のみ表示
-                    println!("半分にします");
                     pos_back = Point {x: x, y: y + self.square_size / 2.0};
                     size_back = Size {width: self.square_size, height: self.square_size / 2.0};
                     pos = Point {x: x + 1.0, y: y - 1.0 + self.square_size / 2.0};
