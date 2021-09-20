@@ -41,8 +41,11 @@ pub mod mino {
         }
     }
 
-    pub fn update(board: &Vec<Vec<usize>>) {
-
+    struct MinoHandler {
+        time: f32,
+    }
+    pub fn update(board: &Vec<Vec<usize>>, mino: &mut Option<Minos>) {
+        // println!("Here is `update`")
     }
 
     pub trait Mino {
