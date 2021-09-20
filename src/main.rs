@@ -31,6 +31,10 @@ pub enum Message {
     Exit,
 }
 
+impl Lienzo {
+    const DOPT_DELTA: f32 =  1.0;
+}
+
 impl Application for Lienzo {
     type Executor = executor::Default;
     type Message = Message;
@@ -118,7 +122,7 @@ impl Application for Lienzo {
         let mut grid = Grid::default();
         grid.colors[0][5] = 1;
         grid.colors[0][7] = 2;
-        grid.set_mino(Some(mino::get_default_mino("I")));
+        grid.set_mino(Some(mino::get_default_mino("J")));
         let canvas: Canvas<Message, Grid> = Canvas::new(grid)
             .width(Length::Units(768))
             .height(Length::Units(525));
@@ -203,16 +207,34 @@ impl Grid {
         let mut x = point.x;
         let mut y;
 
+        let len = self.colors[0].len();
         for column_c in self.colors.iter() { //列xの数forがまわる
             y = point.y;
-            for c in column_c.iter() { //行yの数forがまわる
-                let pos_back = Point {x:x, y: y};
-                let size_back = Size {width: self.square_size, height: self.square_size};
+            for (j, c) in (0..).zip(column_c.iter()) { //行yの数forがまわる
+                if len - j > 21 { // index+5から開始
+                    continue; // 20以上の盤面はかかない 21は半分かく
+                }
+                let pos_back ;
+                let size_back;
+                let pos;
+                let size;
+                if len - j == 21 {
+                    println!("21 dayo");
+                    pos_back = Point {x: x, y: y + self.square_size / 2.0};
+                    size_back = Size {width: self.square_size, height: self.square_size / 2.0};
+                    pos = Point {x: x - 1.0, y: y - 1.0 + self.square_size / 2.0};
+                    size = Size {width: self.square_size - 1.0, height: self.square_size / 2.0 - 1.0};
+                    // println!("x, y: {}, {}", pos.x, pos.y);
+                } else {
+                    pos_back = Point {x: x, y: y};
+                    size_back = Size {width: self.square_size, height: self.square_size};
+                    pos = Point {x: x + 1.0, y: y - 1.0};
+                    size = Size {width: self.square_size - 1.0, height: self.square_size - 1.0};
+                    println!("x, y: {}, {}", pos.x, pos.y);
+                };
                 let square_back = canvas::Path::rectangle(pos_back, size_back);
                 frame.fill(&square_back, Self::COLOR_BACK);
 
-                let pos = Point {x: x + 1.0, y: y - 1.0};
-                let size = Size {width: self.square_size - 1.0, height: self.square_size - 1.0};
                 let square = canvas::Path::rectangle(pos, size);
                 frame.fill(&square , Self::get_color(*c));
 
@@ -252,7 +274,7 @@ impl Grid {
             x = _x;
             for j in 0..4 { //行yの数forがまわる
                 let c = shape[i][j];
-                if c == 0 as usize { //minoでないマスは書かない
+                if c == 0 { //minoでないマスは書かない
                     continue;
                 }
 
@@ -309,7 +331,7 @@ impl Grid {
 
 impl std::default::Default for Grid {
     fn default() -> Self {
-        let column_num = 20; //20まで見える
+        let column_num = 25; //20まで見える
         let row_num = 10;
         let mut colors =  Vec::with_capacity(column_num);
         for _ in 0..row_num {
