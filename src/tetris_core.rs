@@ -130,7 +130,7 @@ pub mod mino {
     impl Default for I {
         fn default() -> Self {
         // 4マス目が左端にくる
-        Self { state: State::State0, position: Point {x: 3.0, y: -1.0}}
+        Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
         }
     }
 
@@ -373,7 +373,7 @@ pub mod mino {
 
     impl Default for T {
         fn default() -> Self {
-        Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
+            Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
         }
     }
 
