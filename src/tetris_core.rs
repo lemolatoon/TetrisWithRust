@@ -75,7 +75,7 @@ pub mod mino {
 
         fn get_shape<T: MinoShape>(&self) -> [[usize; 4]; 4] {
             match self.get_state() {
-                State::State0 => {println!("State0");T::SHAPE0},
+                State::State0 => T::SHAPE0,
                 State::State1 => T::SHAPE1,
                 State::State2 => T::SHAPE2,
                 State::State3 => T::SHAPE3,
@@ -130,7 +130,7 @@ pub mod mino {
     impl Default for I {
         fn default() -> Self {
         // 4マス目が左端にくる
-        Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
+        Self { state: State::State0, position: Point {x: 3.0, y: -1.0}}
         }
     }
 
@@ -179,7 +179,7 @@ pub mod mino {
 
     impl Default for J {
         fn default() -> Self {
-        Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
+        Self { state: State::State0, position: Point {x: 3.0, y: -1.0}}
         }
     }
 
