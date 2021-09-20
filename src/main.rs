@@ -218,19 +218,16 @@ impl Grid {
                 let size_back;
                 let pos;
                 let size;
-                if len - j == 21 {
-                    println!("21 dayo");
+                if len - j == 21 { //一番上の段の場合半分のみ表示
                     pos_back = Point {x: x, y: y + self.square_size / 2.0};
                     size_back = Size {width: self.square_size, height: self.square_size / 2.0};
                     pos = Point {x: x + 1.0, y: y - 1.0 + self.square_size / 2.0};
                     size = Size {width: self.square_size - 1.0, height: self.square_size / 2.0 - 1.0};
-                    // println!("x, y: {}, {}", pos.x, pos.y);
                 } else {
                     pos_back = Point {x: x, y: y};
                     size_back = Size {width: self.square_size, height: self.square_size};
                     pos = Point {x: x + 1.0, y: y - 1.0};
                     size = Size {width: self.square_size - 1.0, height: self.square_size - 1.0};
-                    println!("x, y: {}, {}", pos.x, pos.y);
                 };
                 let square_back = canvas::Path::rectangle(pos_back, size_back);
                 frame.fill(&square_back, Self::COLOR_BACK);
@@ -277,14 +274,27 @@ impl Grid {
                 if c == 0 { //minoでないマスは書かない
                     continue;
                 }
+                let pos_back ;
+                let size_back;
+                let pos;
+                let size;
+                println!("startpoint.y: {}, i: {}, {}", start_point.y, i, start_point.y + (i as f32));
+                if start_point.y + (i as f32) == 0.0 { //一番上の段の場合半分のみ表示
+                    println!("半分にします");
+                    pos_back = Point {x: x, y: y + self.square_size / 2.0};
+                    size_back = Size {width: self.square_size, height: self.square_size / 2.0};
+                    pos = Point {x: x + 1.0, y: y - 1.0 + self.square_size / 2.0};
+                    size = Size {width: self.square_size - 1.0, height: self.square_size / 2.0 - 1.0};
+                } else {
+                    pos_back = Point {x: x, y: y};
+                    size_back = Size {width: self.square_size, height: self.square_size};
+                    pos = Point {x: x + 1.0, y: y - 1.0};
+                    size = Size {width: self.square_size - 1.0, height: self.square_size - 1.0};
+                };
 
-                let pos_back = Point {x:x, y: y};
-                let size_back = Size {width: self.square_size, height: self.square_size};
                 let square_back = canvas::Path::rectangle(pos_back, size_back);
                 frame.fill(&square_back, Self::COLOR_BACK);
 
-                let pos = Point {x: x + 1.0, y: y - 1.0};
-                let size = Size {width: self.square_size - 1.0, height: self.square_size - 1.0};
                 let square = canvas::Path::rectangle(pos, size);
                 frame.fill(&square , Self::get_color(c));
 
