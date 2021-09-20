@@ -179,7 +179,7 @@ pub mod mino {
 
     impl Default for J {
         fn default() -> Self {
-        Self { state: State::State0, position: Point {x: 3.0, y: -1.0}}
+        Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
         }
     }
 
