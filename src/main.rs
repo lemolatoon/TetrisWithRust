@@ -1,5 +1,9 @@
 mod tetris_core;
 
+use tetris_core::mino::Mino;
+use tetris_core::mino::Minos;
+use tetris_core::mino;
+
 use iced::{Align, Application, Button, Canvas, Checkbox, Clipboard, Color, Column, Command, Container, Element, HorizontalAlignment, Length, Point, Rectangle, Row, Settings, Size, Text, button, canvas::{self, Frame}, executor, keyboard};
 use iced_native;
 
@@ -114,6 +118,7 @@ impl Application for Lienzo {
         let mut grid = Grid::default();
         grid.colors[0][5] = 1;
         grid.colors[0][7] = 2;
+        grid.set_mino(Some(mino::get_default_mino("I")));
         let canvas: Canvas<Message, Grid> = Canvas::new(grid)
             .width(Length::Units(768))
             .height(Length::Units(525));
@@ -158,6 +163,8 @@ impl std::default::Default for Circulo {
 struct Grid {
     square_size: f32,
     colors: Vec<Vec<usize>>, //row * column ; 列Vec<行Vec<>>
+    pos: Option<Point>,
+    next: Option<Minos>,
 }
 
 impl<Message> canvas::Program<Message> for Grid {
@@ -166,8 +173,15 @@ impl<Message> canvas::Program<Message> for Grid {
 
         let width = self.square_size * self.colors.len() as f32; //横の長さ 10
         let height = self.square_size * self.colors[0].len() as f32;  //縦の長さ 20
-        let pos = Point {x: (frame.width() - width) / 2.0, y: (frame.height() - height) / 2.0};
+        let pos = match self.pos {
+            None => {
+                Point {x: (frame.width() - width) / 2.0, y: (frame.height() - height) / 2.0}
+            }
+            Some(pos) => pos,
+        };
         frame = self.draw(frame, pos);
+
+        frame = self.write_mino(frame);
 
         vec![frame.into_geometry()]
     }
@@ -210,6 +224,64 @@ impl Grid {
         frame
     }
 
+    pub fn write_mino(&self, mut frame: Frame) -> Frame {
+        let next = match &self.next {
+            None => return frame,
+            Some(mino) => mino,
+        };
+
+        frame = match next {
+            Minos::MinoI(min) => self._write(frame, min.get_shape::<mino::I>(), min.get_position()),
+            Minos::MinoJ(min) => self._write(frame, min.get_shape::<mino::J>(), min.get_position()),
+            Minos::MinoL(min) => self._write(frame, min.get_shape::<mino::L>(), min.get_position()),
+            Minos::MinoO(min) => self._write(frame, min.get_shape::<mino::O>(), min.get_position()),
+            Minos::MinoS(min) => self._write(frame, min.get_shape::<mino::S>(), min.get_position()),
+            Minos::MinoT(min) => self._write(frame, min.get_shape::<mino::T>(), min.get_position()),
+            Minos::MinoZ(min) => self._write(frame, min.get_shape::<mino::Z>(), min.get_position()),
+        };
+
+        frame
+    }
+
+    fn _write(&self, mut frame: Frame, shape: [[usize; 4]; 4],start_point: Point) -> Frame {
+        let mut x = self.pos.unwrap().x + self.square_size * start_point.x;
+        let _y = self.pos.unwrap().y + self.square_size * start_point.y;
+
+        let mut y;
+        for column_c in shape.iter() { //列xの数forがまわる
+            y = _y;
+            for c in column_c.iter() { //行yの数forがまわる
+                if *c == 0 as usize { //minoでないマスは書かない
+                    continue;
+                }
+
+                let pos_back = Point {x:x, y: y};
+                let size_back = Size {width: self.square_size, height: self.square_size};
+                let square_back = canvas::Path::rectangle(pos_back, size_back);
+                frame.fill(&square_back, Self::COLOR_BACK);
+
+                let pos = Point {x: x + 1.0, y: y - 1.0};
+                let size = Size {width: self.square_size - 1.0, height: self.square_size - 1.0};
+                let square = canvas::Path::rectangle(pos, size);
+                frame.fill(&square , Self::get_color(*c));
+
+                y += self.square_size;
+            }
+            x += self.square_size;
+        }
+        frame
+    }
+
+    pub fn set_mino(&mut self, mino: Option<Minos>) -> bool {
+        return match mino {
+                None => false,
+                Some(mino) => {
+                    self.next = Some(mino);
+                    true
+                }
+            }
+        }
+
     fn get_color(i: usize) -> Color {
         return if i == 0 {
             Color::from_rgb8(232, 232, 232)
@@ -249,6 +321,8 @@ impl std::default::Default for Grid {
         Self {
             square_size: 20.0,
             colors: colors,
+            pos: Some(Point {x: 284.0, y: 62.5}),
+            next: None,
         }
     }
 }
