@@ -129,7 +129,8 @@ pub mod mino {
 
     impl Default for I {
         fn default() -> Self {
-        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        // 4マス目が左端にくる
+        Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
         }
     }
 
@@ -178,7 +179,7 @@ pub mod mino {
 
     impl Default for J {
         fn default() -> Self {
-        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
         }
     }
 
@@ -226,7 +227,7 @@ pub mod mino {
 
     impl Default for L {
         fn default() -> Self {
-        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
         }
     }
 
@@ -274,7 +275,7 @@ pub mod mino {
 
     impl Default for O {
         fn default() -> Self {
-        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
         }
     }
 
@@ -322,7 +323,7 @@ pub mod mino {
 
     impl Default for S {
         fn default() -> Self {
-        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
         }
     }
 
@@ -372,7 +373,7 @@ pub mod mino {
 
     impl Default for T {
         fn default() -> Self {
-        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
         }
     }
 
@@ -420,7 +421,7 @@ pub mod mino {
 
     impl Default for Z {
         fn default() -> Self {
-        Self { state: State::State0, position: Point {x: 4.0, y: 0.0}}
+        Self { state: State::State0, position: Point {x: 3.0, y: 0.0}}
         }
     }
 }

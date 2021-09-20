@@ -244,14 +244,15 @@ impl Grid {
     }
 
     fn _write(&self, mut frame: Frame, shape: [[usize; 4]; 4],start_point: Point) -> Frame {
-        let mut x = self.pos.unwrap().x + self.square_size * start_point.x;
-        let _y = self.pos.unwrap().y + self.square_size * start_point.y;
+        let _x = self.pos.unwrap().x + self.square_size * start_point.x;
+        let mut y = self.pos.unwrap().y + self.square_size * start_point.y;
 
-        let mut y;
-        for column_c in shape.iter() { //列xの数forがまわる
-            y = _y;
-            for c in column_c.iter() { //行yの数forがまわる
-                if *c == 0 as usize { //minoでないマスは書かない
+        let mut x;
+        for i in 0..4 { //列xの数forがまわる
+            x = _x;
+            for j in 0..4 { //行yの数forがまわる
+                let c = shape[i][j];
+                if c == 0 as usize { //minoでないマスは書かない
                     continue;
                 }
 
@@ -263,11 +264,12 @@ impl Grid {
                 let pos = Point {x: x + 1.0, y: y - 1.0};
                 let size = Size {width: self.square_size - 1.0, height: self.square_size - 1.0};
                 let square = canvas::Path::rectangle(pos, size);
-                frame.fill(&square , Self::get_color(*c));
+                frame.fill(&square , Self::get_color(c));
 
-                y += self.square_size;
+                //jはx軸なのでjが変わるごとにxを増やす
+                x += self.square_size;
             }
-            x += self.square_size;
+            y += self.square_size;
         }
         frame
     }
