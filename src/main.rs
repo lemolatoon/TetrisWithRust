@@ -222,7 +222,7 @@ impl Grid {
                     println!("21 dayo");
                     pos_back = Point {x: x, y: y + self.square_size / 2.0};
                     size_back = Size {width: self.square_size, height: self.square_size / 2.0};
-                    pos = Point {x: x - 1.0, y: y - 1.0 + self.square_size / 2.0};
+                    pos = Point {x: x + 1.0, y: y - 1.0 + self.square_size / 2.0};
                     size = Size {width: self.square_size - 1.0, height: self.square_size / 2.0 - 1.0};
                     // println!("x, y: {}, {}", pos.x, pos.y);
                 } else {
