@@ -60,6 +60,13 @@ impl Application for Lienzo {
                 match event {
                     iced_native::event::Event::Keyboard(keyboard::Event::CharacterReceived('j')) => {
                         println!("Jdayo");
+                        self.grid.set_mino(Some(Minos::MinoO(mino::O::default())));
+                        match self.grid.next {
+                            Some(Minos::MinoO(_)) => println!("O in update"),
+                            Some(Minos::MinoT(_)) => println!("T in update"),
+                            _ => (),
+                        }
+                        
                     }
                     _ => {}
                 }
@@ -83,7 +90,7 @@ impl Application for Lienzo {
 
         }
 
-        mino::update(&self.grid.colors);
+        mino::update(&self.grid.colors, &mut self.grid.next);
 
         Command::none()
     }
@@ -125,7 +132,10 @@ impl Application for Lienzo {
 
         self.grid.colors[0][5] = 1;
         self.grid.colors[0][7] = 2;
-        self.grid.set_mino(Some(mino::get_default_mino("T")));
+        match self.grid.next { // grid.nextの中身にあるときはそれを優先(これはtest用)
+            None => self.grid.set_mino(Some(mino::get_default_mino("T"))),
+            _ => true,
+        };
         // clone しないと,selfの変数は所有権のせいでmoveできない
         let canvas: Canvas<Message, Grid> = Canvas::new(self.grid.clone())
             .width(Length::Units(768))
@@ -252,6 +262,12 @@ impl Grid {
             None => return frame,
             Some(mino) => mino,
         };
+
+        match next {
+            Minos::MinoO(_) => println!("O処理"),
+            Minos::MinoT(_) => println!("T処理"),
+            _ => (),
+        }
 
         frame = match next {
             Minos::MinoI(min) => self._write(frame, min.get_shape::<mino::I>(), min.get_position()),
