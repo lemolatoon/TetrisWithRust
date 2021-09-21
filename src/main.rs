@@ -10,6 +10,7 @@ use chrono;
 
 use iced::{Align, Application, Button, Canvas, Checkbox, Clipboard, Color, Column, Command, Container, Element, HorizontalAlignment, Length, Point, Rectangle, Row, Settings, Size, Text, button, canvas::{self, Frame}, executor, keyboard};
 use iced_native;
+use tetris_core::mino::get_mino_sets;
 
 pub fn main() {
     Lienzo::run(Settings {
@@ -36,7 +37,6 @@ pub struct Lienzo {
 pub enum Message {
     EventOccurred(iced_native::Event),
     Tick(chrono::DateTime<chrono::Local>),
-    // ToDo(Vec<MessageZipper>),
     Toggled(bool),
     Exit,
 }
@@ -58,10 +58,9 @@ impl Lienzo {
 
     fn drop_check(&mut self, now: chrono::DateTime<chrono::Local>) {
         if !self.soft_drop_flag {
-            if now.timestamp_millis() - self.now_natural_drop.timestamp_millis() > Self::NATURAL_DROP_DELTA {
-                if let Some(minos) = self.grid.next { // Noneでないなら
-                    minos.drop();
-                }
+            if now.timestamp_millis() - self.now_natural_drop.timestamp_millis() > Self::NATURAL_DROP_DELTA { //一秒ごとに
+                self.grid.next.drop();
+                self.now_natural_drop = now; //基準をリセット(0から数え直し)
             }
         }
     }
@@ -102,13 +101,7 @@ impl Application for Lienzo {
                 match event {
                     iced_native::event::Event::Keyboard(keyboard::Event::CharacterReceived('j')) => {
                         println!("Jdayo");
-                        self.grid.set_mino(Some(Minos::MinoO(mino::O::default())));
-                        match self.grid.next {
-                            Some(Minos::MinoO(_)) => println!("O in update"),
-                            Some(Minos::MinoT(_)) => println!("T in update"),
-                            _ => (),
-                        }
-                        
+                        self.grid.next = self.grid.get_mino();
                     }
                     _ => {}
                 }
@@ -183,10 +176,8 @@ impl Application for Lienzo {
 
         self.grid.colors[0][5] = 1;
         self.grid.colors[0][7] = 2;
-        match self.grid.next { // grid.nextの中身にあるときはそれを優先(これはtest用)
-            None => self.grid.set_mino(Some(mino::get_default_mino("T"))),
-            _ => true,
-        };
+        // ↓とりあえずなにか表示したい時用
+        // self.grid.next = self.grid.get_mino();
         // clone しないと,selfの変数は所有権のせいでmoveできない
         let canvas: Canvas<Message, Grid> = Canvas::new(
             Grid {
@@ -235,12 +226,16 @@ impl std::default::Default for Circulo {
     }
 }
 
+/// There starts the definition of Grid
+
 #[derive(Debug, Clone)]
 struct Grid {
     square_size: f32,
     colors: Vec<Vec<usize>>, //row * column ; 列Vec<行Vec<>>
     pos: Option<Point>,
-    next: Option<Minos>,
+    next: Minos, //TODO: Change `Option<Minos>` to `Minos`
+
+    mino_sets: Vec<Minos>,
 }
 
 impl<Message> canvas::Program<Message> for Grid {
@@ -316,12 +311,7 @@ impl Grid {
     }
 
     pub fn write_mino(&self, mut frame: Frame) -> Frame {
-        let next = match &self.next {
-            None => return frame,
-            Some(mino) => mino,
-        };
-
-        frame = match next {
+        frame = match &self.next {
             Minos::MinoI(min) => self._write(frame, min.get_shape::<mino::I>(), min.get_position()),
             Minos::MinoJ(min) => self._write(frame, min.get_shape::<mino::J>(), min.get_position()),
             Minos::MinoL(min) => self._write(frame, min.get_shape::<mino::L>(), min.get_position()),
@@ -377,15 +367,28 @@ impl Grid {
         frame
     }
 
-    pub fn set_mino(&mut self, mino: Option<Minos>) -> bool {
-        return match mino {
-                None => false,
-                Some(mino) => {
-                    self.next = Some(mino);
-                    true
-                }
-            }
+    pub fn set_mino(&mut self, mino: Minos) {
+            self.next = mino;
+    }
+
+    fn get_mino(&mut self) -> Minos { //&mut selfにしたらなぜか怒られなくなった
+        if self.mino_sets.is_empty() {
+                self.mino_sets = get_mino_sets();
+                self.mino_sets.pop().unwrap()
+        } else {
+            self.mino_sets.pop().unwrap()
         }
+
+        /*
+        match &self.mino_sets.pop() {
+            None => { // emptyの場合
+                self.mino_sets = get_mino_sets();
+                self.mino_sets.pop().unwrap()
+            },
+            Some(m) => m,
+        }
+        */
+    }
 
     fn get_color(i: usize) -> Color {
         return if i == 0 {
@@ -428,11 +431,14 @@ impl std::default::Default for Grid {
             colors.push(row);
         } // init (0-fill)
 
+        let mut mino_sets = get_mino_sets();
+
         Self {
             square_size: 20.0,
             colors: colors,
             pos: Some(Point {x: 284.0, y: 62.5}),
-            next: None,
+            next: mino_sets.pop().unwrap(),
+            mino_sets: mino_sets,
         }
     }
 }
