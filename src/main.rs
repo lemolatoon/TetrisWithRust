@@ -1,5 +1,7 @@
 mod tetris_core;
 
+use iced::time;
+use rand::Rng;
 use tetris_core::mino::Mino;
 use tetris_core::mino::Minos;
 use tetris_core::mino;
@@ -17,22 +19,30 @@ pub fn main() {
     }).unwrap();
 }
 
-#[derive(Default)]
 pub struct Lienzo {
     last: Vec<iced_native::Event>,
     exit: button::State,
     enabled: bool,
     should_exit: bool,
     grid: Grid,
+
+    rng: rand::rngs::ThreadRng,
 }
 
 
 #[derive(Debug, Clone)]
 pub enum Message {
     EventOccurred(iced_native::Event),
-    ToDo((iced_native::Event, chrono::DataTime<chrono::Local>)),
+    Tick(chrono::DateTime<chrono::Local>),
+    // ToDo(Vec<MessageZipper>),
     Toggled(bool),
     Exit,
+}
+
+#[derive(Debug, Clone)]
+enum MessageZipper {
+    EventOccurred(iced_native::Event),
+    Tick(chrono::DateTime<chrono::Local>),
 }
 
 impl Lienzo {
@@ -47,7 +57,12 @@ impl Application for Lienzo {
     fn new(_flags: ()) -> (Lienzo, Command<Message>) {
         (
             Lienzo {
-                ..Default::default() //残りはdefault
+                last: Vec::new(),
+                exit: button::State::default(),
+                enabled: false,
+                should_exit: false,
+                grid: Grid::default(),
+                rng: rand::thread_rng(),
             },
             Command::none(),
         )
@@ -59,6 +74,7 @@ impl Application for Lienzo {
 
     fn update(&mut self, message: Message, _clipboard: &mut Clipboard) -> Command<Message> {
         match message {
+            Message::Tick(_) => (),
             Message::EventOccurred(event) if self.enabled => {
                 match event {
                     iced_native::event::Event::Keyboard(keyboard::Event::CharacterReceived('j')) => {
@@ -100,10 +116,16 @@ impl Application for Lienzo {
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
         println!("ここがupdateか？？");
-        time::every(Duration::from_millis(10)).map(Message::Tick)
+        let mut rng = rand::thread_rng();
+        if rng.gen_bool(0.5) {
+            // time::every(std::time::Duration::from_millis(10)).map(Message::Tick)
+            time::every(std::time::Duration::from_millis(10))
+                .map(|_| Message::Tick(chrono::Local::now()))
+        } else {
+            // event listening...
+            iced_native::subscription::events().map(Message::EventOccurred)
+        }
         
-        // event listening...
-        iced_native::subscription::events().map(Message::EventOccurred)
     }
 
     fn should_exit(&self) -> bool {
@@ -295,7 +317,7 @@ impl Grid {
         frame
     }
 
-    fn _write(&self, mut frame: Frame, shape: [[usize; 4]; 4],start_point: Point) -> Frame {
+    fn _write(&self, mut frame: Frame, shape: [[usize; 4]; 4], start_point: Point) -> Frame {
         let _x = self.pos.unwrap().x + self.square_size * start_point.x;
         let mut y = self.pos.unwrap().y + self.square_size * start_point.y;
 

@@ -29,6 +29,33 @@ pub mod mino {
         MinoZ(Z),
     }
 
+    impl Minos {
+        pub fn _drop(&mut self) {
+            
+        }
+
+        pub fn shift(&mut self, x: isize, y: isize) {
+            let shift_exe = |mino| {
+                mino._shift(x, y);
+            };
+        }
+
+        pub fn execute<T, U, V>(&mut self, mino: Minos, f: T) // fはクロージャ
+            where T: Fn(U) -> V
+        {
+            match mino {
+                Minos::MinoI(min) => f(min),
+                Minos::MinoJ(min) => f(min),
+                Minos::MinoL(min) => f(min),
+                Minos::MinoO(min) => f(min),
+                Minos::MinoS(min) => f(min),
+                Minos::MinoT(min) => f(min),
+                Minos::MinoZ(min) => f(min),
+            }
+        }
+
+    }
+
     pub fn get_default_mino(name: &str) -> Minos {
         match name {
             "I" => Minos::MinoI(I::default()),
@@ -52,12 +79,18 @@ pub mod mino {
 
     pub trait Mino {
 
-
         fn get_state(&self) -> &State;
 
         fn set_shape(&mut self, state: State);
 
         fn get_position(&self) -> Point;
+
+        fn set_position(&mut self, point: Point);
+
+        fn _shift(&mut self, x: isize, y: isize) {
+            let point = self.get_position();
+            self.set_position(Point {x: point.x + x, y: point.y + y});
+        }
 
         fn rotate_right(&mut self) {
             self.set_shape(
@@ -112,6 +145,10 @@ pub mod mino {
             self.position
         }
 
+        fn set_position(&mut self, point: Point) {
+            self.position = point;
+        }
+
     }
 
     impl MinoShape for I { // 4 * 4 * 4配列
@@ -160,6 +197,10 @@ pub mod mino {
 
         fn get_position(&self) -> Point {
             self.position
+        }
+
+        fn set_position(&mut self, point: Point) {
+            self.position = point;
         }
     }
 
@@ -210,6 +251,10 @@ pub mod mino {
         fn get_position(&self) -> Point {
             self.position
         }
+
+        fn set_position(&mut self, point: Point) {
+            self.position = point;
+        }
     }
 
     impl MinoShape for L {
@@ -258,6 +303,10 @@ pub mod mino {
         fn get_position(&self) -> Point {
             self.position
         }
+
+        fn set_position(&mut self, point: Point) {
+            self.position = point;
+        }
     }
 
     impl MinoShape for O {
@@ -305,6 +354,10 @@ pub mod mino {
 
         fn get_position(&self) -> Point {
             self.position
+        }
+
+        fn set_position(&mut self, point: Point) {
+            self.position = point;
         }
     }
 
@@ -355,6 +408,9 @@ pub mod mino {
             self.position
         }
 
+        fn set_position(&mut self, point: Point) {
+            self.position = point;
+        }
 
     }
 
@@ -403,6 +459,10 @@ pub mod mino {
 
         fn get_position(&self) -> Point {
             self.position
+        }
+
+        fn set_position(&mut self, point: Point) {
+            self.position = point;
         }
     }
 
@@ -463,6 +523,15 @@ mod tests {
         m3.rotate_left();
         m3.rotate_right();
         assert_eq!(m2, m3);
+    }
 
+    fn shift() {
+        let m1 = S::default();
+        let m2 = get_default_mino("S");
+
+        m1._shift(1, 3);
+        m1._shift(-2, 4);
+
+        m2.shift(-1, 7);
     }
 }
