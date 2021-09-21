@@ -47,7 +47,23 @@ pub mod mino {
                 Minos::MinoZ(min) => min._shift(x, y),
             };
         }
+    }
 
+    use rand::seq::SliceRandom; // なぜかshuffleに必要
+    pub fn get_mino_sets() -> Vec<Minos> {
+        let mut sets = vec![
+            get_default_mino("I"),
+            get_default_mino("J"),
+            get_default_mino("L"),
+            get_default_mino("O"),
+            get_default_mino("S"),
+            get_default_mino("T"),
+            get_default_mino("Z"),
+        ];
+        // vector shuffling
+        let mut rng = rand::thread_rng();
+        sets.shuffle(&mut rng);
+        sets
     }
 
     pub fn get_default_mino(name: &str) -> Minos {
@@ -464,7 +480,7 @@ pub mod mino {
     impl MinoShape for Z {
         const SHAPE0: [[usize; 4]; 4] = [[7, 7, 0, 0],
                                          [0, 7, 7, 0], 
-                                         [0, 6, 0, 0],
+                                         [0, 0, 0, 0],
                                          [0, 0, 0, 0]];
 
         const SHAPE1: [[usize; 4]; 4] = [[0, 0, 7, 0],

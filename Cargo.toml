@@ -10,3 +10,4 @@ iced = {version = "0.3", features = ["canvas", "tokio"]}
 iced_native = "0.4"
 chrono = "0.4"
 rand = "0.8"
+shuffle = { git = "https://github.com/adambudziak/shuffle.git", rev = "a0903d7aecd50b3f915bf2960b73a251336e490a"}
