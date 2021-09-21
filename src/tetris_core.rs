@@ -1,4 +1,3 @@
-use crate::execute;
 
 pub mod mino {
     use iced::Point;
@@ -20,7 +19,7 @@ pub mod mino {
         const SHAPE3: [[usize; 4]; 4];
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, PartialEq, Clone)]
     pub enum Minos {
         MinoI(I),
         MinoJ(J),
@@ -33,26 +32,20 @@ pub mod mino {
 
 
     impl Minos {
-        pub fn _drop(&mut self) {
-            
+        pub fn drop(&mut self) {
+            self.shift(0, -1);
         }
 
         pub fn shift(&mut self, x: isize, y: isize) {
-            let mino = self.get_Mino(&self);
-        }
-
-        pub fn get_Mino(&mut self, mino: Minos) -> &dyn MinoBehavior // fはクロージャ
-        {
-            let m: &MinoBehavior = match mino {
-                Minos::MinoI(min) => min,
-                Minos::MinoJ(min) => min,
-                Minos::MinoL(min) => min,
-                Minos::MinoO(min) => min,
-                Minos::MinoS(min) => min,
-                Minos::MinoT(min) => min,
-                Minos::MinoZ(min) => min,
+            match self {
+                Minos::MinoI(min) => min._shift(x, y),
+                Minos::MinoJ(min) => min._shift(x, y),
+                Minos::MinoL(min) => min._shift(x, y),
+                Minos::MinoO(min) => min._shift(x, y),
+                Minos::MinoS(min) => min._shift(x, y),
+                Minos::MinoT(min) => min._shift(x, y),
+                Minos::MinoZ(min) => min._shift(x, y),
             };
-            m
         }
 
     }
@@ -527,13 +520,16 @@ mod tests {
         assert_eq!(m2, m3);
     }
 
+    #[test]
     fn shift() {
-        let m1 = S::default();
-        let m2 = get_default_mino("S");
+        let mut m1 = S::default();
+        let mut m2 = get_default_mino("S");
 
         m1._shift(1, 3);
         m1._shift(-2, 4);
 
         m2.shift(-1, 7);
+
+        assert_eq!(Minos::MinoS(m1), m2);
     }
 }

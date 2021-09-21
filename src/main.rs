@@ -26,7 +26,9 @@ pub struct Lienzo {
     should_exit: bool,
     grid: Grid,
 
-    rng: rand::rngs::ThreadRng,
+    now_natural_drop: chrono::DateTime<chrono::Local>,
+    now_soft_drop: chrono::DateTime<chrono::Local>,
+    soft_drop_flag: bool,
 }
 
 
@@ -39,14 +41,30 @@ pub enum Message {
     Exit,
 }
 
-#[derive(Debug, Clone)]
-enum MessageZipper {
-    EventOccurred(iced_native::Event),
-    Tick(chrono::DateTime<chrono::Local>),
-}
 
 impl Lienzo {
-    const DOPT_DELTA: f32 =  1.0;
+    // mili秒
+    const NATURAL_DROP_DELTA: i64 =  1000; // 1 * 1000
+    const SOFT_DROP_DELTA: i64 = 500; // 1 / 20 * 1000 (softdropは二十倍の速度)
+
+    fn has_passed(&self, now: f32, last_time : f32, delta: f32) -> bool {
+
+        if now - last_time > delta {
+            true
+        } else {
+            false
+        }
+    }
+
+    fn drop_check(&mut self, now: chrono::DateTime<chrono::Local>) {
+        if !self.soft_drop_flag {
+            if now.timestamp_millis() - self.now_natural_drop.timestamp_millis() > Self::NATURAL_DROP_DELTA {
+                if let Some(minos) = self.grid.next { // Noneでないなら
+                    minos.drop();
+                }
+            }
+        }
+    }
 }
 
 impl Application for Lienzo {
@@ -62,7 +80,10 @@ impl Application for Lienzo {
                 enabled: false,
                 should_exit: false,
                 grid: Grid::default(),
-                rng: rand::thread_rng(),
+
+                now_natural_drop: chrono::Local::now(),
+                now_soft_drop: chrono::Local::now(),
+                soft_drop_flag: false,
             },
             Command::none(),
         )
@@ -74,7 +95,9 @@ impl Application for Lienzo {
 
     fn update(&mut self, message: Message, _clipboard: &mut Clipboard) -> Command<Message> {
         match message {
-            Message::Tick(_) => (),
+            Message::Tick(local_time) => {
+                // SoftDropなどの処理
+            },
             Message::EventOccurred(event) if self.enabled => {
                 match event {
                     iced_native::event::Event::Keyboard(keyboard::Event::CharacterReceived('j')) => {
@@ -297,12 +320,6 @@ impl Grid {
             None => return frame,
             Some(mino) => mino,
         };
-
-        match next {
-            Minos::MinoO(_) => println!("O処理"),
-            Minos::MinoT(_) => println!("T処理"),
-            _ => (),
-        }
 
         frame = match next {
             Minos::MinoI(min) => self._write(frame, min.get_shape::<mino::I>(), min.get_position()),
