@@ -1,6 +1,7 @@
 pub mod mino {
     use iced::Point;
     use std::default::Default;
+    // use std::{sync::mpsc, thread};
 
     #[derive(Debug, PartialEq, Clone)]
     pub enum State {
@@ -46,6 +47,7 @@ pub mod mino {
     }
     pub fn update(board: &Vec<Vec<usize>>, mino: &mut Option<Minos>) {
         // println!("Here is `update`")
+
     }
 
     pub trait Mino {
@@ -112,7 +114,7 @@ pub mod mino {
 
     }
 
-    impl MinoShape for I {
+    impl MinoShape for I { // 4 * 4 * 4配列
         const SHAPE0: [[usize; 4]; 4] = [[0, 0, 0, 0],
                                          [1, 1, 1, 1],
                                          [0, 0, 0, 0],
