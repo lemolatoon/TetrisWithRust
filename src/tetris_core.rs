@@ -33,7 +33,7 @@ pub mod mino {
 
     impl Minos {
         pub fn drop(&mut self) {
-            self.shift(0, -1);
+            self.shift(0, 1);
         }
 
         pub fn shift(&mut self, x: isize, y: isize) {
