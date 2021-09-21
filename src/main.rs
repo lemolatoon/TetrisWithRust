@@ -96,6 +96,8 @@ impl Application for Lienzo {
         match message {
             Message::Tick(local_time) => {
                 // SoftDropなどの処理
+                
+                self.drop_check(local_time);
             },
             Message::EventOccurred(event) if self.enabled => {
                 match event {
@@ -131,14 +133,17 @@ impl Application for Lienzo {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        println!("ここがupdateか？？");
         let mut rng = rand::thread_rng();
+
+        // TODO: このままでは、eventを受けたときに、なぜかsubscription loopが止まってしまう
+
         if rng.gen_bool(0.5) {
-            // time::every(std::time::Duration::from_millis(10)).map(Message::Tick)
-            time::every(std::time::Duration::from_millis(10))
+            println!("Tickにmap");
+            time::every(std::time::Duration::from_millis(50))
                 .map(|_| Message::Tick(chrono::Local::now()))
         } else {
             // event listening...
+            println!("eventにmap");
             iced_native::subscription::events().map(Message::EventOccurred)
         }
         
