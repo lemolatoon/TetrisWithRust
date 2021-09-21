@@ -1,3 +1,5 @@
+use crate::execute;
+
 pub mod mino {
     use iced::Point;
     use std::default::Default;
@@ -29,29 +31,28 @@ pub mod mino {
         MinoZ(Z),
     }
 
+
     impl Minos {
         pub fn _drop(&mut self) {
             
         }
 
         pub fn shift(&mut self, x: isize, y: isize) {
-            let shift_exe = |mino| {
-                mino._shift(x, y);
-            };
+            let mino = self.get_Mino(&self);
         }
 
-        pub fn execute<T, U, V>(&mut self, mino: Minos, f: T) // fはクロージャ
-            where T: Fn(U) -> V
+        pub fn get_Mino(&mut self, mino: Minos) -> &dyn MinoBehavior // fはクロージャ
         {
-            match mino {
-                Minos::MinoI(min) => f(min),
-                Minos::MinoJ(min) => f(min),
-                Minos::MinoL(min) => f(min),
-                Minos::MinoO(min) => f(min),
-                Minos::MinoS(min) => f(min),
-                Minos::MinoT(min) => f(min),
-                Minos::MinoZ(min) => f(min),
-            }
+            let m: &MinoBehavior = match mino {
+                Minos::MinoI(min) => min,
+                Minos::MinoJ(min) => min,
+                Minos::MinoL(min) => min,
+                Minos::MinoO(min) => min,
+                Minos::MinoS(min) => min,
+                Minos::MinoT(min) => min,
+                Minos::MinoZ(min) => min,
+            };
+            m
         }
 
     }
@@ -77,6 +78,7 @@ pub mod mino {
 
     }
 
+
     pub trait Mino {
 
         fn get_state(&self) -> &State;
@@ -89,7 +91,7 @@ pub mod mino {
 
         fn _shift(&mut self, x: isize, y: isize) {
             let point = self.get_position();
-            self.set_position(Point {x: point.x + x, y: point.y + y});
+            self.set_position(Point {x: point.x + (x as f32), y: point.y + (y as f32)});
         }
 
         fn rotate_right(&mut self) {
