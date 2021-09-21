@@ -4,6 +4,8 @@ use tetris_core::mino::Mino;
 use tetris_core::mino::Minos;
 use tetris_core::mino;
 
+use chrono;
+
 use iced::{Align, Application, Button, Canvas, Checkbox, Clipboard, Color, Column, Command, Container, Element, HorizontalAlignment, Length, Point, Rectangle, Row, Settings, Size, Text, button, canvas::{self, Frame}, executor, keyboard};
 use iced_native;
 
@@ -28,6 +30,7 @@ pub struct Lienzo {
 #[derive(Debug, Clone)]
 pub enum Message {
     EventOccurred(iced_native::Event),
+    ToDo((iced_native::Event, chrono::DataTime<chrono::Local>)),
     Toggled(bool),
     Exit,
 }
@@ -90,12 +93,15 @@ impl Application for Lienzo {
 
         }
 
-        mino::update(&self.grid.colors, &mut self.grid.next);
+        // mino::update(&self.grid.colors, &mut self.grid.next, &self.grid);
 
         Command::none()
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
+        println!("ここがupdateか？？");
+        time::every(Duration::from_millis(10)).map(Message::Tick)
+        
         // event listening...
         iced_native::subscription::events().map(Message::EventOccurred)
     }
@@ -137,7 +143,14 @@ impl Application for Lienzo {
             _ => true,
         };
         // clone しないと,selfの変数は所有権のせいでmoveできない
-        let canvas: Canvas<Message, Grid> = Canvas::new(self.grid.clone())
+        let canvas: Canvas<Message, Grid> = Canvas::new(
+            Grid {
+                // TODO: check which is better, self.grid.clone() or this below
+                colors: self.grid.colors.clone(),
+                next: self.grid.next.clone(),
+                ..Default::default()
+            }
+        )
             .width(Length::Units(768))
             .height(Length::Units(525));
 
@@ -356,7 +369,12 @@ impl Grid {
             panic!("illegal color number: {}", i);
         };
     }
+
+    pub fn get_colors(&self) -> &Vec<Vec<usize>> {
+        &self.colors
+    }
 }
+
 
 impl std::default::Default for Grid {
     fn default() -> Self {
