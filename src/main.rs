@@ -46,6 +46,10 @@ pub struct Lienzo {
     left_flag: bool,
     right_left_done_flag: bool,
     high_speed_right_left_flag: bool,
+
+    now_placement: chrono::DateTime<chrono::Local>,
+    place_flag: bool,
+    place_cancel_count: usize,
 }
 
 
@@ -66,30 +70,24 @@ impl Lienzo {
     const WAIT_TIME_LEFT_RIGHT: i64 = 183; // 0.3秒たつまではブロック一つのみ
     const RIGHT_LEFT_DELTA: i64 = 3;
 
+    const PLACEMENT_LOCK_DOWN_DELTA: i64 = 500;
+
     const MODIFIER: Modifiers = Modifiers {shift: false, control: false, alt: false, logo: false};
 
-    fn has_passed(&self, now: f32, last_time : f32, delta: f32) -> bool {
-
-        if now - last_time > delta {
-            true
-        } else {
-            false
-        }
-    }
-
-    fn drop_check(&mut self, now: chrono::DateTime<chrono::Local>) {
+    fn drop_check(&mut self, now: chrono::DateTime<chrono::Local>) -> bool { //障害物により下がれなかった場合のみfalse
         if !self.soft_drop_flag { // natural drop ing...(not soft drop)
             if now.timestamp_millis() - self.now_drop.timestamp_millis() > Self::NATURAL_DROP_DELTA { //一秒ごとに
-                self.grid.next.drop(&self.grid.colors);
                 self.now_drop = now; //基準をリセット(0から数え直し)
+                return self.grid.next.drop(&self.grid.colors);
             }
         } else { // start soft drop
             if now.timestamp_millis() - self.now_drop.timestamp_millis() > Self::SOFT_DROP_DELTA { // 1 / 20 秒ごとに
-                self.grid.next.drop(&self.grid.colors);
                 self.now_drop = now; //基準をリセット(0から数え直し)
+                return self.grid.next.drop(&self.grid.colors);
 
             }
         }
+        true
     }
 
     fn right_left_check(&mut self, now: chrono::DateTime<chrono::Local>) { //右平行移動
@@ -120,6 +118,16 @@ impl Lienzo {
         }
     }
 
+    fn place_check(&mut self, now: chrono::DateTime<chrono::Local>) {
+        if !self.place_flag{ //flagない場合時計のみ更新
+            self.now_placement = now;
+        } else if now.timestamp_millis() - self.now_placement.timestamp_millis() > Self::PLACEMENT_LOCK_DOWN_DELTA {
+            self.grid.next.place(&mut self.grid.colors);
+            self.grid.next = self.grid.get_mino();
+            self.now_placement = now;
+        } //flag: trueだが待っている状態
+    }
+
 }
 
 impl Application for Lienzo {
@@ -144,6 +152,10 @@ impl Application for Lienzo {
                 left_flag: false,
                 right_left_done_flag: false,
                 high_speed_right_left_flag: false,
+
+                now_placement: chrono::Local::now(),
+                place_flag: true, //とりあえずつねにtrue
+                place_cancel_count: 0,
             },
             Command::none(),
         )
@@ -157,8 +169,11 @@ impl Application for Lienzo {
         match message {
             Message::Tick(local_time) => {
                 // SoftDropなどの処理
-                self.drop_check(local_time);
+                if !self.drop_check(local_time) {
+                    self.place_check(local_time);
+                }
                 self.right_left_check(local_time);
+                println!("Position: {:?}", self.grid.next.get_position());
             },
             Message::EventOccurred(event) if self.enabled => {
                 match event {
@@ -172,8 +187,8 @@ impl Application for Lienzo {
                     Keyboard(KeyReleased {key_code: KeyCode::D, modifiers: Self::MODIFIER}) => self.right_flag = false,
                     Keyboard(KeyPressed {key_code: KeyCode::A, modifiers: Self::MODIFIER}) => self.left_flag = true,
                     Keyboard(KeyReleased {key_code: KeyCode::A, modifiers: Self::MODIFIER}) => self.left_flag = false,
-                    Keyboard(keyboard::Event::CharacterReceived('j')) => self.grid.next.rotate_left(&self.grid.colors),
-                    Keyboard(keyboard::Event::CharacterReceived('k')) => self.grid.next.rotate_right(&self.grid.colors),
+                    Keyboard(keyboard::Event::CharacterReceived('j')) => {self.grid.next.rotate_left(&self.grid.colors);()},
+                    Keyboard(keyboard::Event::CharacterReceived('k')) => {self.grid.next.rotate_right(&self.grid.colors);()},
                     _ => {}
                 }
                 self.last.push(event); //eventを表示するためのやつ
@@ -247,8 +262,6 @@ impl Application for Lienzo {
         .on_press(Message::Exit);
 
 
-        self.grid.colors[0][5] = 1;
-        self.grid.colors[0][7] = 2;
         // ↓とりあえずなにか表示したい時用
         // self.grid.next = self.grid.get_mino();
         // clone しないと,selfの変数は所有権のせいでmoveできない
@@ -399,13 +412,14 @@ impl Grid {
 
     fn _write(&self, mut frame: Frame, shape: [[usize; 4]; 4], start_point: Point) -> Frame {
         let _x = self.pos.unwrap().x + self.square_size * start_point.x;
-        let mut y = self.pos.unwrap().y + self.square_size * start_point.y;
+        // 21マス目を追加したことによる補正(y + 1)
+        let mut y = self.pos.unwrap().y + self.square_size * (start_point.y + 1.0);
 
         let mut x;
         for i in 0..4 { //列xの数forがまわる
             x = _x;
             for j in 0..4 { //行yの数forがまわる
-                let c = shape[i][j];
+                let c = shape[i][j]; 
                 if c == 0 { //minoでないマスは書かない
                     x += self.square_size; // TがJになるbugの修正
                     continue;
@@ -414,7 +428,7 @@ impl Grid {
                 let size_back;
                 let pos;
                 let size;
-                if start_point.y + (i as f32) == 0.0 { //一番上の段の場合半分のみ表示
+                if start_point.y + (i as f32) == - 1.0 { //一番上の段の場合半分のみ表示
                     pos_back = Point {x: x, y: y + self.square_size / 2.0};
                     size_back = Size {width: self.square_size, height: self.square_size / 2.0};
                     pos = Point {x: x + 1.0, y: y - 1.0 + self.square_size / 2.0};
