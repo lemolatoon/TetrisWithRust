@@ -38,9 +38,14 @@ pub struct Lienzo {
     should_exit: bool,
     grid: Grid,
 
-    now_natural_drop: chrono::DateTime<chrono::Local>,
-    now_soft_drop: chrono::DateTime<chrono::Local>,
+    now_drop: chrono::DateTime<chrono::Local>,
     soft_drop_flag: bool,
+
+    now_right_left: chrono::DateTime<chrono::Local>,
+    right_flag: bool,
+    left_flag: bool,
+    right_left_done_flag: bool,
+    high_speed_right_left_flag: bool,
 }
 
 
@@ -58,6 +63,9 @@ impl Lienzo {
     const NATURAL_DROP_DELTA: i64 =  1000; // 1 * 1000
     const SOFT_DROP_DELTA: i64 = 50; // 1 / 20 * 1000 (softdropは二十倍の速度)
 
+    const WAIT_TIME_LEFT_RIGHT: i64 = 183; // 0.3秒たつまではブロック一つのみ
+    const RIGHT_LEFT_DELTA: i64 = 3;
+
     const MODIFIER: Modifiers = Modifiers {shift: false, control: false, alt: false, logo: false};
 
     fn has_passed(&self, now: f32, last_time : f32, delta: f32) -> bool {
@@ -71,15 +79,43 @@ impl Lienzo {
 
     fn drop_check(&mut self, now: chrono::DateTime<chrono::Local>) {
         if !self.soft_drop_flag { // natural drop ing...(not soft drop)
-            if now.timestamp_millis() - self.now_natural_drop.timestamp_millis() > Self::NATURAL_DROP_DELTA { //一秒ごとに
-                self.grid.next.drop();
-                self.now_natural_drop = now; //基準をリセット(0から数え直し)
+            if now.timestamp_millis() - self.now_drop.timestamp_millis() > Self::NATURAL_DROP_DELTA { //一秒ごとに
+                self.grid.next.drop(&self.grid.colors);
+                self.now_drop = now; //基準をリセット(0から数え直し)
             }
         } else { // start soft drop
-            if now.timestamp_millis() - self.now_natural_drop.timestamp_millis() > Self::SOFT_DROP_DELTA { // 1 / 20 秒ごとに
-                self.grid.next.drop();
-                self.now_natural_drop = now; //基準をリセット(0から数え直し)
+            if now.timestamp_millis() - self.now_drop.timestamp_millis() > Self::SOFT_DROP_DELTA { // 1 / 20 秒ごとに
+                self.grid.next.drop(&self.grid.colors);
+                self.now_drop = now; //基準をリセット(0から数え直し)
 
+            }
+        }
+    }
+
+    fn right_left_check(&mut self, now: chrono::DateTime<chrono::Local>) { //右平行移動
+        if self.right_flag { // waiting 0.3 second
+            if !self.right_left_done_flag { //まだ最初の１ブロックも動かしてないならば
+                self.high_speed_right_left_flag = false; //high speed modeをリセット
+                self.grid.next.right(&self.grid.colors);
+                self.now_right_left = now;
+            } else if self.high_speed_right_left_flag && now.timestamp_millis() - self.now_right_left.timestamp_millis() > Self::RIGHT_LEFT_DELTA { //高速移動
+                self.grid.next.right(&self.grid.colors);
+                self.high_speed_right_left_flag = true;
+            } else if now.timestamp_millis() - self.now_right_left.timestamp_millis() > Self::WAIT_TIME_LEFT_RIGHT { // 0.3s経過したならば高速モードに移行
+                self.grid.next.right(&self.grid.colors);
+                self.high_speed_right_left_flag = true;
+            }
+        } else if self.left_flag {
+            if !self.right_left_done_flag { //まだ最初の１ブロックも動かしてないならば
+                self.high_speed_right_left_flag = false; //high speed modeをリセット
+                self.grid.next.left(&self.grid.colors);
+                self.now_right_left = now;
+            } else if self.high_speed_right_left_flag && now.timestamp_millis() - self.now_right_left.timestamp_millis() > Self::RIGHT_LEFT_DELTA { //高速移動
+                self.grid.next.left(&self.grid.colors);
+                self.high_speed_right_left_flag = true;
+            } else if now.timestamp_millis() - self.now_right_left.timestamp_millis() > Self::WAIT_TIME_LEFT_RIGHT { // 0.3s経過したならば高速モードに移行
+                self.grid.next.left(&self.grid.colors);
+                self.high_speed_right_left_flag = true;
             }
         }
     }
@@ -100,9 +136,14 @@ impl Application for Lienzo {
                 should_exit: false,
                 grid: Grid::default(),
 
-                now_natural_drop: chrono::Local::now(),
-                now_soft_drop: chrono::Local::now(),
+                now_drop: chrono::Local::now(),
                 soft_drop_flag: false,
+
+                now_right_left: chrono::Local::now(),
+                right_flag: false,
+                left_flag: false,
+                right_left_done_flag: false,
+                high_speed_right_left_flag: false,
             },
             Command::none(),
         )
@@ -116,18 +157,23 @@ impl Application for Lienzo {
         match message {
             Message::Tick(local_time) => {
                 // SoftDropなどの処理
-                
                 self.drop_check(local_time);
+                self.right_left_check(local_time);
             },
             Message::EventOccurred(event) if self.enabled => {
-                let modifiers = Modifiers {shift: false, control: false, alt: false, logo: false};
                 match event {
-                    Keyboard(keyboard::Event::CharacterReceived('j')) => {
-                        println!("Jdayo");
+                    Keyboard(keyboard::Event::CharacterReceived('c')) => {
+                        println!("Cdayo");
                         self.grid.next = self.grid.get_mino();
                     },
                     Keyboard(KeyPressed {key_code: KeyCode::S, modifiers: Self::MODIFIER}) => self.soft_drop_flag = true,
                     Keyboard(KeyReleased {key_code: KeyCode::S, modifiers: Self::MODIFIER}) => self.soft_drop_flag = false,
+                    Keyboard(KeyPressed {key_code: KeyCode::D, modifiers: Self::MODIFIER}) => self.right_flag = true,
+                    Keyboard(KeyReleased {key_code: KeyCode::D, modifiers: Self::MODIFIER}) => self.right_flag = false,
+                    Keyboard(KeyPressed {key_code: KeyCode::A, modifiers: Self::MODIFIER}) => self.left_flag = true,
+                    Keyboard(KeyReleased {key_code: KeyCode::A, modifiers: Self::MODIFIER}) => self.left_flag = false,
+                    Keyboard(keyboard::Event::CharacterReceived('j')) => self.grid.next.rotate_left(&self.grid.colors),
+                    Keyboard(keyboard::Event::CharacterReceived('k')) => self.grid.next.rotate_right(&self.grid.colors),
                     _ => {}
                 }
                 self.last.push(event); //eventを表示するためのやつ

@@ -32,8 +32,61 @@ pub mod mino {
 
 
     impl Minos {
-        pub fn drop(&mut self) {
+        pub fn drop(&mut self, board: &Vec<Vec<usize>>) {
             self.shift(0, 1);
+        }
+
+        pub fn right(&mut self, board: &Vec<Vec<usize>>) {
+            self.shift(1, 0);
+        }
+
+        pub fn left(&mut self, board: &Vec<Vec<usize>>) {
+            self.shift(-1, 0);
+        }
+
+        pub fn rotate_right(&mut self, board: &Vec<Vec<usize>>) {
+            self._rotate_right();
+        }
+
+        pub fn rotate_left(&mut self, board: &Vec<Vec<usize>>) {
+            self._rotate_left();
+        }
+
+
+        pub fn is_settable(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            let pos = self.get_position();
+            let x = pos.x as isize;
+            let y = pos.y as isize;
+            let shape = self.get_shape();
+            for i in 0..4 { // 各mino型について検証
+                for j in 0..4 {
+                    let i2 = i as isize;
+                    let j2 = j as isize;
+                    if shape[i][j] != 0 && (
+                        //ここの条件判定を抜けるとx > 0, y > 0が保証される(要検証)
+                        x + i2 < 0 + 5 || x + i2 > 9 + 5 || y + j2 > 19 + 5 ||
+                        board[(x as usize) + i][(y as usize) + j] != 0
+                    )
+                    { //そのマスにミノがあり、board上にもあるなら
+                        return false;
+                    }
+                }
+            }
+            true
+        }
+    }
+
+    impl Minos {
+        pub fn get_position(&mut self) -> Point {
+            match self {
+                Minos::MinoI(min) => min.get_position(),
+                Minos::MinoJ(min) => min.get_position(),
+                Minos::MinoL(min) => min.get_position(),
+                Minos::MinoO(min) => min.get_position(),
+                Minos::MinoS(min) => min.get_position(),
+                Minos::MinoT(min) => min.get_position(),
+                Minos::MinoZ(min) => min.get_position(),
+            }
         }
 
         pub fn shift(&mut self, x: isize, y: isize) {
@@ -46,6 +99,42 @@ pub mod mino {
                 Minos::MinoT(min) => min._shift(x, y),
                 Minos::MinoZ(min) => min._shift(x, y),
             };
+        }
+
+        pub fn _rotate_right(&mut self) {
+            match self {
+                Minos::MinoI(min) => min.rotate_right(),
+                Minos::MinoJ(min) => min.rotate_right(),
+                Minos::MinoL(min) => min.rotate_right(),
+                Minos::MinoO(min) => min.rotate_right(),
+                Minos::MinoS(min) => min.rotate_right(),
+                Minos::MinoT(min) => min.rotate_right(),
+                Minos::MinoZ(min) => min.rotate_right(),
+            }
+        }
+
+        pub fn _rotate_left(&mut self) {
+            match self {
+                Minos::MinoI(min) => min.rotate_left(),
+                Minos::MinoJ(min) => min.rotate_left(),
+                Minos::MinoL(min) => min.rotate_left(),
+                Minos::MinoO(min) => min.rotate_left(),
+                Minos::MinoS(min) => min.rotate_left(),
+                Minos::MinoT(min) => min.rotate_left(),
+                Minos::MinoZ(min) => min.rotate_left(),
+            }
+        }
+
+        pub fn get_shape(&self) -> [[usize; 4]; 4] {
+            match self {
+                Minos::MinoI(min) => min.get_shape::<I>(),
+                Minos::MinoJ(min) => min.get_shape::<J>(),
+                Minos::MinoL(min) => min.get_shape::<L>(),
+                Minos::MinoO(min) => min.get_shape::<O>(),
+                Minos::MinoS(min) => min.get_shape::<S>(),
+                Minos::MinoT(min) => min.get_shape::<T>(),
+                Minos::MinoZ(min) => min.get_shape::<Z>(),
+            }
         }
     }
 
@@ -547,5 +636,47 @@ mod tests {
         m2.shift(-1, 7);
 
         assert_eq!(Minos::MinoS(m1), m2);
+    }
+
+    #[test]
+    fn settable() {
+        let empty = empty_board();
+        let mut m1 = get_default_mino("O");
+        m1.shift(4, 0);
+        assert!(m1.is_settable(&empty));
+
+        let mut m1 = get_default_mino("I");
+        m1._rotate_right();
+        m1.shift(0, 17);
+        assert!(!m1.is_settable(&empty));
+
+        let mut board = empty_board();
+        board[3][1 + 5] = 5;
+        let mut m1 = get_default_mino("I");
+        assert!(!m1.is_settable(&board));
+        m1._rotate_right();
+        for row in &board {
+            println!("{:?}", row);
+        }
+        println!("=====");
+        for row in m1.get_shape() {
+            println!("{:?}", row);
+        }
+        println!("{:?}", m1.get_position());
+        assert!(m1.is_settable(&board));
+    }
+
+    fn empty_board() -> Vec<Vec<usize>> {
+        let column_num = 25; //20まで見える
+        let row_num = 10;
+        let mut colors =  Vec::with_capacity(column_num);
+        for _ in 0..row_num {
+            let mut row: Vec<usize> = Vec::with_capacity(row_num);
+            for _ in 0..column_num {
+                row.push(0);
+            }
+            colors.push(row);
+        } // init (0-fill)
+        colors
     }
 }
