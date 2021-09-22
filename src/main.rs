@@ -492,7 +492,7 @@ impl Grid {
 
 
 impl std::default::Default for Grid {
-    fn default() -> Self {
+    fn default() -> Self { 
         let column_num = 25; //20まで見える
         let row_num = 10;
         let mut colors =  Vec::with_capacity(column_num);
