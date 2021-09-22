@@ -73,6 +73,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "iced",
+ "iced_futures",
  "iced_native",
  "rand 0.8.4",
  "shuffle",

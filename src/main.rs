@@ -1,5 +1,6 @@
 mod tetris_core;
 
+use iced::futures::future::Map;
 use iced::time;
 use rand::Rng;
 use tetris_core::mino::Mino;
@@ -35,6 +36,7 @@ pub struct Lienzo {
 
 #[derive(Debug, Clone)]
 pub enum Message {
+    Progress(iced_native::Event, chrono::DateTime<chrono::Local>),
     EventOccurred(iced_native::Event),
     Tick(chrono::DateTime<chrono::Local>),
     Toggled(bool),
@@ -94,6 +96,7 @@ impl Application for Lienzo {
 
     fn update(&mut self, message: Message, _clipboard: &mut Clipboard) -> Command<Message> {
         match message {
+            Message::Progress(event, local_time) => (),
             Message::Tick(local_time) => {
                 // SoftDropなどの処理
                 
@@ -133,20 +136,17 @@ impl Application for Lienzo {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        let mut rng = rand::thread_rng();
 
         // TODO: このままでは、eventを受けたときに、なぜかsubscription loopが止まってしまう
 
-        if rng.gen_bool(0.5) {
-            println!("Tickにmap");
-            time::every(std::time::Duration::from_millis(50))
-                .map(|_| Message::Tick(chrono::Local::now()))
-        } else {
-            // event listening...
-            println!("eventにmap");
-            iced_native::subscription::events().map(Message::EventOccurred)
-        }
-        
+        let tick = time::every(std::time::Duration::from_millis(50))
+                .map(|_| Message::Tick(chrono::Local::now()));
+
+        let events = iced_native::subscription::events().map(Message::EventOccurred);
+
+        // 複数のsubscriptionを渡したいときにはvecにいれてbatchに渡そう!!
+        iced_futures::Subscription::batch(vec![tick, events])
+
     }
 
     fn should_exit(&self) -> bool {
