@@ -62,12 +62,13 @@ pub mod mino {
                 for j in 0..4 {
                     let i2 = i as isize;
                     let j2 = j as isize;
-                    if shape[i][j] != 0 && (
+                    if shape[j][i] != 0 && ( // shapeにアクセスするときは (j, i) で行う
                         //ここの条件判定を抜けるとx > 0, y > 0が保証される(要検証)
-                        x + i2 < 0 + 5 || x + i2 > 9 + 5 || y + j2 > 19 + 5 ||
-                        board[(x as usize) + i][(y as usize) + j] != 0
+                        x + i2 < 0 || x + i2 > 9 || y + j2 + 5 > 19 + 5 || // ここのやつは満たす(=マスからはみ出る)
+                        board[(x as usize) + i][(y as usize) + j + 5] != 0 // 上に隠れている５行分y座標たす
                     )
                     { //そのマスにミノがあり、board上にもあるなら
+                        println!("`is settable` returns false at (i, j): ({}, {})", i, j);
                         return false;
                     }
                 }
@@ -643,27 +644,71 @@ mod tests {
         let empty = empty_board();
         let mut m1 = get_default_mino("O");
         m1.shift(4, 0);
+
+        //For Debug
+        let board = empty_board();
+        for row in &board {
+            println!("{:?}", row);
+        }
+        println!("=====");
+        let shape = m1.get_shape();
+        for i in 0..4 {
+            for j in 0..4 {
+                print!("{}", shape[j][i]);
+            }
+            println!("");
+        }
+        println!("=====");
+        println!("{:?}", m1.get_position());
+
         assert!(m1.is_settable(&empty));
+        println!("settable");
 
         let mut m1 = get_default_mino("I");
         m1._rotate_right();
+
+        // For Debug
+        println!("{:?}", m1.get_position());
         m1.shift(0, 17);
+        let board = empty_board();
+        for row in &board {
+            println!("{:?}", row);
+        }
+        println!("=====");
+        let shape = m1.get_shape();
+        for i in 0..4 {
+            for j in 0..4 {
+                print!("{}", shape[j][i]);
+            }
+            println!("");
+        }
+        println!("=====");
+        println!("{:?}", m1.get_position());
+
         assert!(!m1.is_settable(&empty));
+        println!("not settable");
 
         let mut board = empty_board();
         board[3][1 + 5] = 5;
         let mut m1 = get_default_mino("I");
         assert!(!m1.is_settable(&board));
+        println!("settable");
+
         m1._rotate_right();
         for row in &board {
             println!("{:?}", row);
         }
         println!("=====");
-        for row in m1.get_shape() {
-            println!("{:?}", row);
+        let shape = m1.get_shape();
+        for i in 0..4 {
+            for j in 0..4 {
+                print!("{}", shape[j][i]);
+            }
+            println!("");
         }
         println!("{:?}", m1.get_position());
         assert!(m1.is_settable(&board));
+        println!("settable");
     }
 
     fn empty_board() -> Vec<Vec<usize>> {
