@@ -1,6 +1,8 @@
 mod tetris_core;
 
 use iced::futures::future::Map;
+use iced::keyboard::KeyCode;
+use iced::keyboard::Modifiers;
 use iced::time;
 use rand::Rng;
 use tetris_core::mino::Mino;
@@ -10,7 +12,15 @@ use tetris_core::mino;
 use chrono;
 
 use iced::{Align, Application, Button, Canvas, Checkbox, Clipboard, Color, Column, Command, Container, Element, HorizontalAlignment, Length, Point, Rectangle, Row, Settings, Size, Text, button, canvas::{self, Frame}, executor, keyboard};
+
+use iced_native::event::Event::Keyboard;
+use iced::keyboard::Event::KeyPressed;
+use iced::keyboard::Event::KeyReleased;
+
 use iced_native;
+
+
+
 use tetris_core::mino::get_mino_sets;
 
 pub fn main() {
@@ -36,7 +46,6 @@ pub struct Lienzo {
 
 #[derive(Debug, Clone)]
 pub enum Message {
-    Progress(iced_native::Event, chrono::DateTime<chrono::Local>),
     EventOccurred(iced_native::Event),
     Tick(chrono::DateTime<chrono::Local>),
     Toggled(bool),
@@ -47,7 +56,9 @@ pub enum Message {
 impl Lienzo {
     // mili秒
     const NATURAL_DROP_DELTA: i64 =  1000; // 1 * 1000
-    const SOFT_DROP_DELTA: i64 = 500; // 1 / 20 * 1000 (softdropは二十倍の速度)
+    const SOFT_DROP_DELTA: i64 = 50; // 1 / 20 * 1000 (softdropは二十倍の速度)
+
+    const MODIFIER: Modifiers = Modifiers {shift: false, control: false, alt: false, logo: false};
 
     fn has_passed(&self, now: f32, last_time : f32, delta: f32) -> bool {
 
@@ -59,13 +70,20 @@ impl Lienzo {
     }
 
     fn drop_check(&mut self, now: chrono::DateTime<chrono::Local>) {
-        if !self.soft_drop_flag {
+        if !self.soft_drop_flag { // natural drop ing...(not soft drop)
             if now.timestamp_millis() - self.now_natural_drop.timestamp_millis() > Self::NATURAL_DROP_DELTA { //一秒ごとに
                 self.grid.next.drop();
                 self.now_natural_drop = now; //基準をリセット(0から数え直し)
             }
+        } else { // start soft drop
+            if now.timestamp_millis() - self.now_natural_drop.timestamp_millis() > Self::SOFT_DROP_DELTA { // 1 / 20 秒ごとに
+                self.grid.next.drop();
+                self.now_natural_drop = now; //基準をリセット(0から数え直し)
+
+            }
         }
     }
+
 }
 
 impl Application for Lienzo {
@@ -96,18 +114,20 @@ impl Application for Lienzo {
 
     fn update(&mut self, message: Message, _clipboard: &mut Clipboard) -> Command<Message> {
         match message {
-            Message::Progress(event, local_time) => (),
             Message::Tick(local_time) => {
                 // SoftDropなどの処理
                 
                 self.drop_check(local_time);
             },
             Message::EventOccurred(event) if self.enabled => {
+                let modifiers = Modifiers {shift: false, control: false, alt: false, logo: false};
                 match event {
-                    iced_native::event::Event::Keyboard(keyboard::Event::CharacterReceived('j')) => {
+                    Keyboard(keyboard::Event::CharacterReceived('j')) => {
                         println!("Jdayo");
                         self.grid.next = self.grid.get_mino();
-                    }
+                    },
+                    Keyboard(KeyPressed {key_code: KeyCode::S, modifiers: Self::MODIFIER}) => self.soft_drop_flag = true,
+                    Keyboard(KeyReleased {key_code: KeyCode::S, modifiers: Self::MODIFIER}) => self.soft_drop_flag = false,
                     _ => {}
                 }
                 self.last.push(event); //eventを表示するためのやつ
@@ -139,9 +159,11 @@ impl Application for Lienzo {
 
         // TODO: このままでは、eventを受けたときに、なぜかsubscription loopが止まってしまう
 
+        // 50 mili秒ごとに呼ばれる
         let tick = time::every(std::time::Duration::from_millis(50))
                 .map(|_| Message::Tick(chrono::Local::now()));
 
+        // events毎に呼ばれる
         let events = iced_native::subscription::events().map(Message::EventOccurred);
 
         // 複数のsubscriptionを渡したいときにはvecにいれてbatchに渡そう!!
