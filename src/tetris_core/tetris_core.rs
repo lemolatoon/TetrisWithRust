@@ -41,9 +41,41 @@ pub mod mino {
             true
         }
 
+        pub fn erase_lines(&mut self, board: &Vec<Vec<usize>>) -> Vec<usize> {
+            let columns_num = board.len(); //列 = 10
+            let rows_num = board[0].len(); //行 = 25
+            let mut erasable_vec = Vec::new();
+            for j in 0..rows_num { //行ごとにcheck
+                let mut erasable = true;
+                for i in 0..columns_num {
+                    if board[i][j] == 0 {
+                        erasable = false;
+                    } //穴があるなら消せない
+                }
+                if erasable { //この行がerasableなら行番号をvectorに追加
+                    erasable_vec.push(j);
+                }
+            } 
+            erasable_vec
+        }
+
+        pub fn hard_drop(&mut self, board: &mut Vec<Vec<usize>>) {
+            while self.drop(board) {} //落ちられるところまで落ちる
+            self.place(board);
+        }
+
         pub fn place(&mut self, board: &mut Vec<Vec<usize>>) -> bool {
             self._place(board);
+            self.erase(board);
             true
+        }
+
+        pub fn erase(&mut self, board: &mut Vec<Vec<usize>>) {
+            let erasable_vec = self.erase_lines(board);
+            for (index, j) in (0..).zip(erasable_vec.iter()) {
+                // 一回消されるとshiftされるためその補正のための- index
+                board.swap_remove(j - index);
+            }
         }
 
         pub fn right(&mut self, board: &Vec<Vec<usize>>) -> bool {
@@ -135,7 +167,7 @@ pub mod mino {
                 for j in 0..4 {
                     let c = shape[j][i];
                     if c != 0 { //minoがあるなら
-                        board[(x + (i as isize)) as usize][(y + (j as isize)) as usize + 5] = shape[j][i];
+                        board[(x + (i as isize)) as usize][(y + (j as isize) + 5) as usize] = shape[j][i];
                     }
                 }
             }
@@ -711,10 +743,11 @@ mod tests {
 
         let mut m1 = get_default_mino("I");
         m1._rotate_right();
-        m1.shift(0, 17);
+        m1.shift(0, 18);
         let mut empty = empty_board();
-        // m1._place(&mut empty);
-        // debug(&mut m1, &empty);
+        // m1.place(&mut empty);
+        debug(&mut m1, &empty);
+        let mut empty = empty_board();
         assert!(!m1.is_settable(&empty));
         let empty = empty_board();
 
@@ -745,8 +778,7 @@ mod tests {
 
     fn debug(m1: &mut Minos, board: &Vec<Vec<usize>>) {
         //For Debug
-        let board = empty_board();
-        for row in &board {
+        for row in &board[..] {
             println!("{:?}", row);
         }
         println!("=====");
