@@ -12,6 +12,7 @@ use tetris_core::tetris_core::mino::Minos;
 use tetris_core::tetris_core::mino;
 
 use grid::grid::grids::Grid;
+use grid::grid::grids::GridMino;
 
 use chrono;
 
@@ -311,15 +312,12 @@ impl Application for Lienzo {
             .width(Length::Units(768))
             .height(Length::Units(525));
 
-        let hold_canvas: Canvas<Message, Grid> = Canvas::new(
-            Grid::get_mino_grid(
-                Point {x: 0.0, y: 0.0},
-                20.0,
-                self.hold
-            )
+
+        let hold_canvas: Canvas<Message, GridMino> = Canvas::new(
+            GridMino::default(20.0, self.hold, Point {x: 2.5, y: 2.5})
         )
-            .width(Length::Units(80))
-            .height(Length::Units(80));
+            .width(Length::Units(85))
+            .height(Length::Units(85));
 
 
 
