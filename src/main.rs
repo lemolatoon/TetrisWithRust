@@ -222,8 +222,8 @@ impl Application for Lienzo {
                     Keyboard(KeyReleased {key_code: KeyCode::D, modifiers: Self::MODIFIER}) => self.right_flag = false,
                     Keyboard(KeyPressed {key_code: KeyCode::A, modifiers: Self::MODIFIER}) => self.left_flag = true,
                     Keyboard(KeyReleased {key_code: KeyCode::A, modifiers: Self::MODIFIER}) => self.left_flag = false,
-                    Keyboard(KeyPressed {key_code: KeyCode::J, modifiers: Self::MODIFIER}) => {self.grid.next.rotate_left(&self.grid.colors);()},
-                    Keyboard(KeyPressed {key_code: KeyCode::K, modifiers: Self::MODIFIER}) => {self.grid.next.rotate_right(&self.grid.colors);()},
+                    Keyboard(KeyPressed {key_code: KeyCode::J, modifiers: Self::MODIFIER}) => {self.grid.next.SRS_rotate_left(&self.grid.colors);()},
+                    Keyboard(KeyPressed {key_code: KeyCode::K, modifiers: Self::MODIFIER}) => {self.grid.next.SRS_rotate_right(&self.grid.colors);()},
                     Keyboard(KeyPressed { key_code: KeyCode::W, modifiers: Self::MODIFIER}) => self.hard_drop(),
                     Keyboard(KeyPressed { key_code: KeyCode::L, modifiers: Self::MODIFIER}) => self.hold(),
                     _ => {}

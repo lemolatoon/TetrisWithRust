@@ -113,6 +113,15 @@ pub mod mino {
             true
         }
 
+        pub fn rotate_left(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_left();
+            if !self.is_settable(board) {
+                self._rotate_right();
+                return false;
+            }
+            true
+        }
+
 
         fn _erase_row(index: usize, board: &mut Vec<Vec<usize>>) {
             // 列ごとに取り出し特定の行番号(index)を消去する
@@ -124,15 +133,6 @@ pub mod mino {
                 *column = vec_tmp;
                 // 値を消した分、うえから０をいれる
             }
-        }
-
-        pub fn rotate_left(&mut self, board: &Vec<Vec<usize>>) -> bool {
-            self._rotate_left();
-            if !self.is_settable(board) {
-                self._rotate_right();
-                return false;
-            }
-            true
         }
 
 
@@ -167,9 +167,409 @@ pub mod mino {
             }
             true
         }
+
+        pub fn SRS_rotate_right(&mut self, board: &Vec<Vec<usize>>) -> bool { // super rotation system
+            match self {
+                Minos::MinoI(_) => self._I_SRS_rotate_right(board), // Iミノのみ挙動が違う
+                _ => self._SRS_rotate_right(board),
+            }
+        }
+
+        pub fn SRS_rotate_left(&mut self, board: &Vec<Vec<usize>>) -> bool { // super rotation system
+            match self {
+                Minos::MinoI(_) => self._I_SRS_rotate_left(board), // Iミノのみ挙動が違う
+                _ => self._SRS_rotate_left(board),
+            }
+        }
+
     }
 
     impl Minos {
+
+        pub fn _SRS_rotate_right(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            match self.get_state() {
+                State::State0 => self._SRS_s0_s1_right(board),
+                State::State1 => self._SRS_s1_s2_right(board),
+                State::State2 => self._SRS_s2_s3_right(board),
+                State::State3 => self._SRS_s3_s0_right(board),
+            }
+        }
+
+        pub fn _SRS_rotate_left(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            match self.get_state() {
+                State::State0 => self._SRS_s0_s3_left(board),
+                State::State1 => self._SRS_s1_s0_left(board),
+                State::State2 => self._SRS_s2_s1_left(board),
+                State::State3 => self._SRS_s3_s2_left(board),
+            }
+        }
+
+        pub fn _I_SRS_rotate_right(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            match self.get_state() {
+                State::State0 => self._I_SRS_s0_s1_right(board),
+                State::State1 => self._I_SRS_s1_s2_right(board),
+                State::State2 => self._I_SRS_s2_s3_right(board),
+                State::State3 => self._I_SRS_s3_s0_right(board),
+            }
+        }
+        
+        pub fn _I_SRS_rotate_left(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            match self.get_state() {
+                State::State0 => self._I_SRS_s0_s3_left(board),
+                State::State1 => self._I_SRS_s1_s0_left(board),
+                State::State2 => self._I_SRS_s2_s1_left(board),
+                State::State3 => self._I_SRS_s3_s2_left(board),
+            }
+        }
+
+        pub fn _SRS_s0_s1_right(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_right();
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(0, -1);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, -2);
+            self._rotate_left();
+            false
+        }
+
+        pub fn _SRS_s1_s2_right(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_right();
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(0, 1);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, -3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 2);
+            self._rotate_left();
+            false
+        }
+
+        pub fn _SRS_s2_s3_right(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_right();
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(0, -1);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, -2);
+            self._rotate_left();
+            false
+        }
+
+        pub fn _SRS_s3_s0_right(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_right();
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(0, 1);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, -3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 2);
+            self._rotate_left();
+            false
+        }
+
+        pub fn _SRS_s0_s3_left(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_left();
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(0, -1);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, -2);
+            self._rotate_right();
+            false
+        }
+
+        pub fn _SRS_s1_s0_left(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_left();
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(0, 1);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, -3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 2);
+            self._rotate_right();
+            false
+        }
+
+        pub fn _SRS_s2_s1_left(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_left();
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(0, -1);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, -2);
+            self._rotate_right();
+            false
+        }
+
+        pub fn _SRS_s3_s2_left(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_left();
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(0, 1);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, -3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 2);
+            self._rotate_right();
+            false
+        }
+
+        pub fn _I_SRS_s0_s1_right(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_right();
+            if self.is_settable(board) {return true;}
+
+            self.shift(-2, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(3, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-3, 1);
+            if self.is_settable(board) {return true;}
+
+            self.shift(3, -3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 2);
+            self._rotate_left();
+            false
+        }
+
+        pub fn _I_SRS_s1_s2_right(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_right();
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(3, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-3, -2);
+            if self.is_settable(board) {return true;}
+
+            self.shift(3, 3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-2, -1);
+            self._rotate_left();
+            false
+        }
+
+        pub fn _I_SRS_s2_s3_right(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_right();
+            if self.is_settable(board) {return true;}
+
+            self.shift(2, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-3, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(3, -1);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-3, 3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, -2);
+            self._rotate_left();
+            false
+        }
+
+        pub fn _I_SRS_s3_s0_right(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_right();
+            if self.is_settable(board) {return true;}
+
+            self.shift(-2, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(3, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(0, 2);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-3, -3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(2, 1);
+            self._rotate_left();
+            false
+        }
+
+        pub fn _I_SRS_s0_s3_left(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_left();
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(3, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-3, -2);
+            if self.is_settable(board) {return true;}
+
+            self.shift(3, 3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-2, -1);
+            self._rotate_right();
+            false
+        }
+
+        pub fn _I_SRS_s1_s0_left(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_left();
+            if self.is_settable(board) {return true;}
+
+            self.shift(2, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-3, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(3, -1);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-3, 3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, -2);
+            self._rotate_right();
+            false
+        }
+
+        pub fn _I_SRS_s2_s1_left(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_left();
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-3, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(3, 2);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-3, -3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(2, 1);
+            self._rotate_right();
+            false
+        }
+
+        pub fn _I_SRS_s3_s2_left(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            self._rotate_left();
+            if self.is_settable(board) {return true;}
+
+            self.shift(1, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-3, 0);
+            if self.is_settable(board) {return true;}
+
+            self.shift(0, 1);
+            if self.is_settable(board) {return true;}
+
+            self.shift(3, -3);
+            if self.is_settable(board) {return true;}
+
+            self.shift(-1, 2);
+            self._rotate_right();
+            false
+        }
+
+        pub fn get_state(&self) -> &State {
+            match self {
+                Minos::MinoI(min) => min.get_state(),
+                Minos::MinoJ(min) => min.get_state(),
+                Minos::MinoL(min) => min.get_state(),
+                Minos::MinoO(min) => min.get_state(),
+                Minos::MinoS(min) => min.get_state(),
+                Minos::MinoT(min) => min.get_state(),
+                Minos::MinoZ(min) => min.get_state(),
+            }
+        }
+
 
         pub fn mino2num(&self) -> isize {
             match self {
