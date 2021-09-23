@@ -43,6 +43,8 @@ pub struct Lienzo {
     should_exit: bool,
     grid: Grid,
 
+    hold: isize,
+
     now_drop: chrono::DateTime<chrono::Local>,
     soft_drop_flag: bool,
 
@@ -72,7 +74,7 @@ impl Lienzo {
     const NATURAL_DROP_DELTA: i64 =  1000; // 1 * 1000
     const SOFT_DROP_DELTA: i64 = 50; // 1 / 20 * 1000 (softdropは二十倍の速度)
 
-    const WAIT_TIME_LEFT_RIGHT: i64 = 183; // 0.3秒たつまではブロック一つのみ
+    const WAIT_TIME_LEFT_RIGHT: i64 = 500; // 0.3秒たつまではブロック一つのみ (origin 183)
     const RIGHT_LEFT_DELTA: i64 = 3;
 
     const PLACEMENT_LOCK_DOWN_DELTA: i64 = 500;
@@ -124,19 +126,34 @@ impl Lienzo {
     }
 
     fn place_check(&mut self, now: chrono::DateTime<chrono::Local>) {
-        if !self.place_flag{ //flagない場合時計のみ更新
-            self.now_placement = now;
-        } else if now.timestamp_millis() - self.now_placement.timestamp_millis() > Self::PLACEMENT_LOCK_DOWN_DELTA {
+        if now.timestamp_millis() - self.now_placement.timestamp_millis() > Self::PLACEMENT_LOCK_DOWN_DELTA {
             self.grid.next.place(&mut self.grid.colors);
             self.grid.next = self.grid.get_mino();
             self.now_placement = now;
-        } //flag: trueだが待っている状態
+        } else {
+            self.now_placement = now;
+        }//flag: trueだが待っている状態
     }
 
     fn hard_drop(&mut self) {
-        while self.grid.next.drop(&self.grid.colors) { //落ちてる間はtrue
+        if !self.place_flag { // place処理中でないのなら
+            self.place_flag = true;
+            while self.grid.next.drop(&self.grid.colors) { //落ちてる間はtrue
+            }
+            self.grid.next.place(&mut self.grid.colors);
+            self.grid.next = self.grid.get_mino();
+            self.place_flag = false;
         }
-        self.grid.next.place(&mut self.grid.colors);
+    }
+
+    fn hold(&mut self) {
+        if self.hold == -1 { //minoなし
+            self.hold = Minos::mino2num(&self.grid.next);
+        } else {
+            let tmp = self.hold;
+            self.hold = Minos::mino2num(&self.grid.next);
+            self.grid.next = Minos::num2mino(tmp);
+        }
     }
 
 
@@ -156,6 +173,8 @@ impl Application for Lienzo {
                 should_exit: false,
                 grid: Grid::default(),
 
+                hold: -1,
+
                 now_drop: chrono::Local::now(),
                 soft_drop_flag: false,
 
@@ -166,7 +185,7 @@ impl Application for Lienzo {
                 high_speed_right_left_flag: false,
 
                 now_placement: chrono::Local::now(),
-                place_flag: true, //とりあえずつねにtrue
+                place_flag: false, // for not to interrapted
                 place_cancel_count: 0,
             },
             Command::none(),
@@ -180,14 +199,16 @@ impl Application for Lienzo {
     fn update(&mut self, message: Message, _clipboard: &mut Clipboard) -> Command<Message> {
         match message {
             Message::Tick(local_time) => {
-                // SoftDropなどの処理
-                if !self.drop_check(local_time) {
-                    self.place_check(local_time);
+                println!("self.place_flag : {}", self.place_flag);
+                if !self.place_flag { //邪魔しちゃだめ
+                    // SoftDropなどの処理
+                    if !self.drop_check(local_time) {
+                        self.place_check(local_time);
+                    }
+                    self.right_left_check(local_time);
                 }
-                self.right_left_check(local_time);
-                println!("Position: {:?}", self.grid.next.get_position());
             },
-            Message::EventOccurred(event) if self.enabled => {
+            Message::EventOccurred(event) => {
                 match event {
                     Keyboard(keyboard::Event::CharacterReceived('c')) => {
                         println!("Cdayo");
@@ -202,6 +223,7 @@ impl Application for Lienzo {
                     Keyboard(KeyPressed {key_code: KeyCode::J, modifiers: Self::MODIFIER}) => {self.grid.next.rotate_left(&self.grid.colors);()},
                     Keyboard(KeyPressed {key_code: KeyCode::K, modifiers: Self::MODIFIER}) => {self.grid.next.rotate_right(&self.grid.colors);()},
                     Keyboard(KeyPressed { key_code: KeyCode::W, modifiers: Self::MODIFIER}) => self.hard_drop(),
+                    Keyboard(KeyPressed { key_code: KeyCode::L, modifiers: Self::MODIFIER}) => self.hold(),
                     _ => {}
                 }
                 self.last.push(event); //eventを表示するためのやつ

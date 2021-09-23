@@ -66,16 +66,24 @@ pub mod mino {
 
         pub fn place(&mut self, board: &mut Vec<Vec<usize>>) -> bool {
             self._place(board);
+            println!("place");
             self.erase(board);
             true
         }
 
         pub fn erase(&mut self, board: &mut Vec<Vec<usize>>) {
+            println!("====erase_start======");
             let erasable_vec = self.erase_lines(board);
-            for (index, j) in (0..).zip(erasable_vec.iter()) {
-                // 一回消されるとshiftされるためその補正のための- index
-                Self::_erase_row(j - index, board);
+            println!("plan to erase: {:?}", erasable_vec);
+            for j in erasable_vec {
+                // 上からminoがshiftしてくるだけなので
+                // 行番号はそのまま使える
+                for column in board.iter() {
+                    println!("{:?}", column);
+                }
+                Self::_erase_row(j, board);
             }
+            println!("====erase_end========");
         }
 
         pub fn right(&mut self, board: &Vec<Vec<usize>>) -> bool {
@@ -108,11 +116,13 @@ pub mod mino {
 
         fn _erase_row(index: usize, board: &mut Vec<Vec<usize>>) {
             // 列ごとに取り出し特定の行番号(index)を消去する
+            println!("remove: {}", index);
             for column in board { // NOTICE: here exsits borrow 
-                println!("column len: {}", column.len());
                 column.remove(index);
+                let mut vec_tmp = vec![0];
+                vec_tmp.append(column); //前(盤面上)から0を結合
+                *column = vec_tmp;
                 // 値を消した分、うえから０をいれる
-                column.push(0);
             }
         }
 
@@ -135,9 +145,11 @@ pub mod mino {
                 for j in 0..4 {
                     let i2 = i as isize;
                     let j2 = j as isize;
+                    /*
                     println!("(x + (i as isize)) as usize = {}", (x + (i as isize)) as usize);
                     println!("y: {}, j: {}", y, j);
                     println!("(y + (j as isize)) as usize + 5 = {}", (y + (j as isize) + 5) as usize);
+                    */
                     if shape[j][i] != 0 && ( // shapeにアクセスするときは (j, i) で行う
                         //ここの条件判定を抜けるとx > 0, y > 0が保証される(要検証)
                         x + i2 < 0 || x + i2 > 9 || y + j2 + 5 > 19 + 5 || // ここのやつは満たす(=マスからはみ出る)
@@ -145,8 +157,10 @@ pub mod mino {
                         board[(x + (i as isize)) as usize][(y + (j as isize) + 5) as usize] != 0 // 上に隠れている５行分y座標たす
                     )
                     { //そのマスにミノがあり、board上にもあるなら
+                        /*
                         println!("`is settable` returns false at (i, j): ({}, {})", i, j);
                         println!("y + j2 + 5 = {}", y + j2 + 5);
+                        */
                         return false;
                     }
                 }
@@ -156,6 +170,31 @@ pub mod mino {
     }
 
     impl Minos {
+
+        pub fn mino2num(&self) -> isize {
+            match self {
+                Minos::MinoI(min) => 0,
+                Minos::MinoJ(min) => 1,
+                Minos::MinoL(min) => 2,
+                Minos::MinoO(min) => 3,
+                Minos::MinoS(min) => 4,
+                Minos::MinoT(min) => 5,
+                Minos::MinoZ(min) => 6,
+            }
+        }
+
+        pub fn num2mino(num: isize) -> Minos {
+            match num {
+                0 => get_default_mino("I"),
+                1 => get_default_mino("J"),
+                2 => get_default_mino("L"),
+                3 => get_default_mino("O"),
+                4 => get_default_mino("S"),
+                5 => get_default_mino("T"),
+                6 => get_default_mino("Z"),
+                _ => panic!("illegal number at `num2mino`"),
+            }
+        }
 
         pub fn get_position(&mut self) -> Point {
             match self {
