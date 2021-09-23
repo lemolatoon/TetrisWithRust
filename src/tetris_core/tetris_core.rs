@@ -74,7 +74,7 @@ pub mod mino {
             let erasable_vec = self.erase_lines(board);
             for (index, j) in (0..).zip(erasable_vec.iter()) {
                 // 一回消されるとshiftされるためその補正のための- index
-                board.swap_remove(j - index);
+                Self::_erase_row(j - index, board);
             }
         }
 
@@ -103,6 +103,17 @@ pub mod mino {
                 return false;
             }
             true
+        }
+
+
+        fn _erase_row(index: usize, board: &mut Vec<Vec<usize>>) {
+            // 列ごとに取り出し特定の行番号(index)を消去する
+            for column in board { // NOTICE: here exsits borrow 
+                println!("column len: {}", column.len());
+                column.remove(index);
+                // 値を消した分、うえから０をいれる
+                column.push(0);
+            }
         }
 
         pub fn rotate_left(&mut self, board: &Vec<Vec<usize>>) -> bool {
