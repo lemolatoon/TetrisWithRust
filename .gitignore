@@ -1,3 +1,3 @@
 /target
 /src/grid.rs
-/src/grid/
+/src/grid/*
