@@ -17,3 +17,5 @@ L: ホールド
 スーパーローテーションシステム: 実装済
 
 ネクスト表示: 未実装
+
+![tetris](https://user-images.githubusercontent.com/63438515/134529925-9f04f9af-06ed-4fc4-94a7-81bc0edfaa92.gif)
