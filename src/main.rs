@@ -149,6 +149,7 @@ impl Lienzo {
     fn hold(&mut self) {
         if self.hold == -1 { //minoなし
             self.hold = Minos::mino2num(&self.grid.next);
+            self.grid.next = self.grid.get_mino();
         } else {
             let tmp = self.hold;
             self.hold = Minos::mino2num(&self.grid.next);
@@ -310,6 +311,17 @@ impl Application for Lienzo {
             .width(Length::Units(768))
             .height(Length::Units(525));
 
+        let hold_canvas: Canvas<Message, Grid> = Canvas::new(
+            Grid::get_mino_grid(
+                Point {x: 0.0, y: 0.0},
+                20.0,
+                self.hold
+            )
+        )
+            .width(Length::Units(80))
+            .height(Length::Units(80));
+
+
 
         //縦に積み重ねる
         let explanation = Column::new()
@@ -320,7 +332,8 @@ impl Application for Lienzo {
             .push(exit);
 
         let content = Row::new()
-            .align_items(Align::Center)
+            .align_items(Align::Start)
+            .push(hold_canvas)
             .push(canvas)
             .push(explanation);
 
