@@ -127,21 +127,16 @@ impl Lienzo {
     }
 
     fn place_check(&mut self, now: chrono::DateTime<chrono::Local>) {
-        println!("delta: {}", now.timestamp_millis() - self.now_placement.timestamp_millis());
         let droppable = self.grid.next.droppable(&self.grid.colors); // dropできるのかどうか
         if droppable {
-            println!("droppable");
             self.now_placement = now;
         } else if now.timestamp_millis() - self.now_placement.timestamp_millis() > Self::PLACEMENT_LOCK_DOWN_DELTA {
             // droppable かつ　所定時間以上経過
             self.place_flag = true;
-            println!("now placing");
             self.grid.next.place(&mut self.grid.colors);
             self.grid.next = self.grid.get_mino();
             self.now_placement = now;
             self.place_flag = false;
-        } else {
-            println!("waiting...");
         }
     }
 
