@@ -33,12 +33,21 @@ pub mod mino {
 
     impl Minos {
         pub fn drop(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            // return droppable
             self.shift(0, 1);
             if !self.is_settable(board) {
                 self.shift(0, -1);
                 return false;
             }
             true
+        }
+
+        pub fn droppable(&mut self, board: &Vec<Vec<usize>>) -> bool {
+            let droppable = self.drop(board);
+            if droppable {
+                self.shift(0, -1);
+            }
+            droppable
         }
 
         pub fn erase_lines(&mut self, board: &Vec<Vec<usize>>) -> Vec<usize> {
@@ -66,24 +75,17 @@ pub mod mino {
 
         pub fn place(&mut self, board: &mut Vec<Vec<usize>>) -> bool {
             self._place(board);
-            println!("place");
             self.erase(board);
             true
         }
 
         pub fn erase(&mut self, board: &mut Vec<Vec<usize>>) {
-            println!("====erase_start======");
             let erasable_vec = self.erase_lines(board);
-            println!("plan to erase: {:?}", erasable_vec);
             for j in erasable_vec {
                 // 上からminoがshiftしてくるだけなので
                 // 行番号はそのまま使える
-                for column in board.iter() {
-                    println!("{:?}", column);
-                }
                 Self::_erase_row(j, board);
             }
-            println!("====erase_end========");
         }
 
         pub fn right(&mut self, board: &Vec<Vec<usize>>) -> bool {
@@ -125,7 +127,6 @@ pub mod mino {
 
         fn _erase_row(index: usize, board: &mut Vec<Vec<usize>>) {
             // 列ごとに取り出し特定の行番号(index)を消去する
-            println!("remove: {}", index);
             for column in board { // NOTICE: here exsits borrow 
                 column.remove(index);
                 let mut vec_tmp = vec![0];

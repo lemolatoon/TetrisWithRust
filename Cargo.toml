@@ -1,5 +1,5 @@
 [package]
-name = "bazier_tool"
+name = "tetris_with_rust"
 version = "0.1.0"
 edition = "2018"
 

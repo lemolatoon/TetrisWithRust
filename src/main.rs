@@ -127,13 +127,22 @@ impl Lienzo {
     }
 
     fn place_check(&mut self, now: chrono::DateTime<chrono::Local>) {
-        if now.timestamp_millis() - self.now_placement.timestamp_millis() > Self::PLACEMENT_LOCK_DOWN_DELTA {
+        println!("delta: {}", now.timestamp_millis() - self.now_placement.timestamp_millis());
+        let droppable = self.grid.next.droppable(&self.grid.colors); // dropできるのかどうか
+        if droppable {
+            println!("droppable");
+            self.now_placement = now;
+        } else if now.timestamp_millis() - self.now_placement.timestamp_millis() > Self::PLACEMENT_LOCK_DOWN_DELTA {
+            // droppable かつ　所定時間以上経過
+            self.place_flag = true;
+            println!("now placing");
             self.grid.next.place(&mut self.grid.colors);
             self.grid.next = self.grid.get_mino();
             self.now_placement = now;
+            self.place_flag = false;
         } else {
-            self.now_placement = now;
-        }//flag: trueだが待っている状態
+            println!("waiting...");
+        }
     }
 
     fn hard_drop(&mut self) {
@@ -201,12 +210,10 @@ impl Application for Lienzo {
     fn update(&mut self, message: Message, _clipboard: &mut Clipboard) -> Command<Message> {
         match message {
             Message::Tick(local_time) => {
-                println!("self.place_flag : {}", self.place_flag);
                 if !self.place_flag { //邪魔しちゃだめ
                     // SoftDropなどの処理
-                    if !self.drop_check(local_time) {
-                        self.place_check(local_time);
-                    }
+                    self.drop_check(local_time);
+                    self.place_check(local_time);
                     self.right_left_check(local_time);
                 }
             },
@@ -275,18 +282,18 @@ impl Application for Lienzo {
 
     fn view(&mut self) -> Element<Message> {
         //fold で第一引数のものにfを適用する。iterの文だけやる
-        let events = self.last.iter().fold( 
-            Column::new().spacing(10),
-            |column, event| {
-                column.push(Text::new(format!("{:?}", event)).size(20))
-            },
-        );
+        // let events = self.last.iter().fold( 
+            // Column::new().spacing(10),
+            // |column, event| {
+                // column.push(Text::new(format!("{:?}", event)).size(20))
+            // },
+        // );
 
-        let toggle = Checkbox::new(
-            self.enabled, //checkboxにより変化するflag
-            "Listen to runtime events",
-            Message::Toggled,
-        );
+        // let toggle = Checkbox::new(
+        //    self.enabled, //checkboxにより変化するflag
+        //    "Listen to runtime events",
+        //    Message::Toggled,
+        //);
 
         let exit = Button::new(
             &mut self.exit,
@@ -319,20 +326,55 @@ impl Application for Lienzo {
             .width(Length::Units(85))
             .height(Length::Units(85));
 
+        
+        let next0_canvas: Canvas<Message, GridMino> = Canvas::new(
+            GridMino::default(30.0, Minos::mino2num(&self.grid.get_next(0)), Point{x: 2.5, y: 2.5})
+        )
+            .width(Length::Units(125))
+            .height(Length::Units(125));
+
+        let next_num: usize = 4;
+        let mut nexts_canvas: Vec<Canvas<Message, GridMino>> = Vec::with_capacity(4);
+        for i in 0..next_num {
+            let next_canvas: Canvas<Message, GridMino> = Canvas::new(
+                GridMino::default(20.0, Minos::mino2num(&self.grid.get_next(i+1)), Point{x: 2.5, y: 2.5})
+            )
+                .width(Length::Units(80))
+                .height(Length::Units(80));
+                nexts_canvas.push(next_canvas);
+        }
+
+        let nexts = Column::new()
+            .align_items(Align::Center)
+            .push(next0_canvas)
+            .spacing(10)
+            .push(nexts_canvas.pop().unwrap())
+            .spacing(10)
+            .push(nexts_canvas.pop().unwrap())
+            .spacing(10)
+            .push(nexts_canvas.pop().unwrap())
+            .spacing(10)
+            .push(nexts_canvas.pop().unwrap());
+
+        // 関数型っぽくかけそうだけどよくわからない
+        // nexts_canvas.iter()
+            // .fold(nexts, |x, y| x.push(nexts_canvas.pop().unwrap()));
+
 
 
         //縦に積み重ねる
         let explanation = Column::new()
             .align_items(Align::Center)
-            .spacing(20)
-            .push(events)
-            .push(toggle)
+            .spacing(100)
+            // .push(events)
+            // .push(toggle)
             .push(exit);
 
         let content = Row::new()
             .align_items(Align::Start)
             .push(hold_canvas)
             .push(canvas)
+            .push(nexts)
             .push(explanation);
 
         Container::new(content)
