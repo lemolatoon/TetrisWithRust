@@ -68,18 +68,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
-name = "bazier_tool"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "iced",
- "iced_futures",
- "iced_native",
- "rand 0.8.4",
- "shuffle",
-]
-
-[[package]]
 name = "bit-set"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2320,6 +2308,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-xid",
+]
+
+[[package]]
+name = "tetris_with_rust"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "iced",
+ "iced_futures",
+ "iced_native",
+ "rand 0.8.4",
+ "shuffle",
 ]
 
 [[package]]
