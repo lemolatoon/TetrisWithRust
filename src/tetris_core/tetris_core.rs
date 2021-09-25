@@ -73,19 +73,21 @@ pub mod mino {
             self.place(board);
         }
 
-        pub fn place(&mut self, board: &mut Vec<Vec<usize>>) -> bool {
+        pub fn place(&mut self, board: &mut Vec<Vec<usize>>) -> Vec<usize> {
             self._place(board);
-            self.erase(board);
-            true
+            // retur erased lines
+            self.erase(board)
         }
 
-        pub fn erase(&mut self, board: &mut Vec<Vec<usize>>) {
+        pub fn erase(&mut self, board: &mut Vec<Vec<usize>>) -> Vec<usize> {
             let erasable_vec = self.erase_lines(board);
-            for j in erasable_vec {
+            for j in erasable_vec.iter() {
                 // 上からminoがshiftしてくるだけなので
                 // 行番号はそのまま使える
-                Self::_erase_row(j, board);
+                Self::_erase_row(*j, board);
             }
+            // vector of indexes of lines
+            erasable_vec
         }
 
         pub fn right(&mut self, board: &Vec<Vec<usize>>) -> bool {

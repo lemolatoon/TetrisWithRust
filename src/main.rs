@@ -46,18 +46,27 @@ pub struct Lienzo {
 
     hold: isize,
 
+    // ミノ落下時の制御
     now_drop: chrono::DateTime<chrono::Local>,
     soft_drop_flag: bool,
+    hard_drop_flag: bool,
 
+    // ミノ左右移動時の制御
     now_right_left: chrono::DateTime<chrono::Local>,
     right_flag: bool,
     left_flag: bool,
     right_left_done_flag: bool,
     high_speed_right_left_flag: bool,
 
+    // ミノ設置時の制御
     now_placement: chrono::DateTime<chrono::Local>,
     place_flag: bool,
     place_cancel_count: usize,
+
+    // ライン消去時の制御
+    now_erase: chrono::DateTime<chrono::Local>,
+    erase_flag: bool,
+    erased_lines: Vec<usize>,
 }
 
 
@@ -79,6 +88,8 @@ impl Lienzo {
     const RIGHT_LEFT_DELTA: i64 = 3;
 
     const PLACEMENT_LOCK_DOWN_DELTA: i64 = 500;
+
+    const LINES_ERASE_DELTA: i64 = 1000;
 
     const MODIFIER: Modifiers = Modifiers {shift: false, control: false, alt: false, logo: false};
 
@@ -133,22 +144,46 @@ impl Lienzo {
         } else if now.timestamp_millis() - self.now_placement.timestamp_millis() > Self::PLACEMENT_LOCK_DOWN_DELTA {
             // droppable かつ　所定時間以上経過
             self.place_flag = true;
-            self.grid.next.place(&mut self.grid.colors);
+            self.effect_init_place(now);
+
             self.grid.next = self.grid.get_mino();
             self.now_placement = now;
             self.place_flag = false;
         }
     }
 
-    fn hard_drop(&mut self) {
+    fn effect_init_place(&mut self, now: chrono::DateTime<chrono::Local>) {
+            self.erased_lines = self.grid.next.place(&mut self.grid.colors);
+            
+            if !self.erased_lines.is_empty() {
+                //init
+                self.now_erase = now;
+                self.erase_flag = true;
+                self.effect_check(now);
+            }
+    }
+
+    fn effect_check(&mut self, now: chrono::DateTime<chrono::Local>) {
+        // erase が確定したときに呼ばれる
+        // つまり、place_check内部からも呼ばれる
+        if now.timestamp_millis() - self.now_erase.timestamp_millis() > Self::LINES_ERASE_DELTA {
+            self.erase_flag = false;
+            self.erased_lines = Vec::new();
+        } else {
+            self.grid.effect_lines(&self.erased_lines, 8); // 8 is black
+        }
+    }
+
+    fn hard_drop(&mut self, now: chrono::DateTime<chrono::Local>) {
         if !self.place_flag { // place処理中でないのなら
             self.place_flag = true;
             while self.grid.next.drop(&self.grid.colors) { //落ちてる間はtrue
             }
-            self.grid.next.place(&mut self.grid.colors);
+            self.effect_init_place(now);
             self.grid.next = self.grid.get_mino();
             self.place_flag = false;
         }
+        self.hard_drop_flag = false;
     }
 
     fn hold(&mut self) {
@@ -181,18 +216,27 @@ impl Application for Lienzo {
 
                 hold: -1,
 
+                // ミノ落下時の制御
                 now_drop: chrono::Local::now(),
                 soft_drop_flag: false,
+                hard_drop_flag: false,
 
+                // ミノ左右移動時の制御
                 now_right_left: chrono::Local::now(),
                 right_flag: false,
                 left_flag: false,
                 right_left_done_flag: false,
                 high_speed_right_left_flag: false,
 
+                // ミノ設置時の制御
                 now_placement: chrono::Local::now(),
                 place_flag: false, // for not to interrapted
                 place_cancel_count: 0,
+
+                // ライン消去時の制御
+                now_erase: chrono::Local::now(),
+                erase_flag: false,
+                erased_lines: Vec::new(),
             },
             Command::none(),
         )
@@ -205,11 +249,17 @@ impl Application for Lienzo {
     fn update(&mut self, message: Message, _clipboard: &mut Clipboard) -> Command<Message> {
         match message {
             Message::Tick(local_time) => {
-                if !self.place_flag { //邪魔しちゃだめ
-                    // SoftDropなどの処理
-                    self.drop_check(local_time);
-                    self.place_check(local_time);
-                    self.right_left_check(local_time);
+                if self.erase_flag { // 消去処理中なら
+                    self.effect_check(local_time);
+                } else if !self.place_flag { //邪魔しちゃだめ
+                    if !self.hard_drop_flag {
+                        // SoftDropなどの処理
+                        self.drop_check(local_time);
+                        self.place_check(local_time);
+                        self.right_left_check(local_time);
+                    } else {
+                        self.hard_drop(local_time);
+                    }
                 }
             },
             Message::EventOccurred(event) => {
@@ -226,7 +276,7 @@ impl Application for Lienzo {
                     Keyboard(KeyReleased {key_code: KeyCode::A, modifiers: Self::MODIFIER}) => self.left_flag = false,
                     Keyboard(KeyPressed {key_code: KeyCode::J, modifiers: Self::MODIFIER}) => {self.grid.next.SRS_rotate_left(&self.grid.colors);()},
                     Keyboard(KeyPressed {key_code: KeyCode::K, modifiers: Self::MODIFIER}) => {self.grid.next.SRS_rotate_right(&self.grid.colors);()},
-                    Keyboard(KeyPressed { key_code: KeyCode::W, modifiers: Self::MODIFIER}) => self.hard_drop(),
+                    Keyboard(KeyPressed { key_code: KeyCode::W, modifiers: Self::MODIFIER}) => self.hard_drop_flag = true,
                     Keyboard(KeyPressed { key_code: KeyCode::L, modifiers: Self::MODIFIER}) => self.hold(),
                     _ => {}
                 }
