@@ -153,13 +153,19 @@ impl Lienzo {
     }
 
     fn effect_init_place(&mut self, now: chrono::DateTime<chrono::Local>) {
-            self.erased_lines = self.grid.next.place(&mut self.grid.colors);
+            // 消す予定のライン
+            self.erased_lines = self.grid.next.erase_lines(&mut self.grid.colors);
             
             if !self.erased_lines.is_empty() {
                 //init
                 self.now_erase = now;
                 self.erase_flag = true;
+                // TODO: call fn here : write effect in grid.rs
+                // the fn is also not implemented
                 self.effect_check(now);
+            } else {
+                // どこも消さないなら単に置くだけ
+                self.grid.next._place(&mut self.grid.colors);
             }
     }
 
@@ -167,8 +173,10 @@ impl Lienzo {
         // erase が確定したときに呼ばれる
         // つまり、place_check内部からも呼ばれる
         if now.timestamp_millis() - self.now_erase.timestamp_millis() > Self::LINES_ERASE_DELTA {
+            // effect終了
             self.erase_flag = false;
             self.erased_lines = Vec::new();
+            // TODO: clear the Vector in grid which is for effect
         } else {
             self.grid.effect_lines(&self.erased_lines, 8); // 8 is black
         }
@@ -237,6 +245,7 @@ impl Application for Lienzo {
                 now_erase: chrono::Local::now(),
                 erase_flag: false,
                 erased_lines: Vec::new(),
+                buffered_lines: Vec::new(),
             },
             Command::none(),
         )
