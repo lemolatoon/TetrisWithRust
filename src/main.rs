@@ -144,42 +144,61 @@ impl Lienzo {
         } else if now.timestamp_millis() - self.now_placement.timestamp_millis() > Self::PLACEMENT_LOCK_DOWN_DELTA {
             // droppable かつ　所定時間以上経過
             self.place_flag = true;
-            self.effect_init_place(now);
+            if self.effect_init_place(now) {
+                // もし消すラインがなくeffectもないのなら
+                self.next_mino();
+            }
 
-            self.grid.next = self.grid.get_mino();
             self.now_placement = now;
-            self.place_flag = false;
         }
     }
 
-    fn effect_init_place(&mut self, now: chrono::DateTime<chrono::Local>) {
+    fn effect_init_place(&mut self, now: chrono::DateTime<chrono::Local>) -> bool {
             // 消す予定のライン
+            self.grid.next._place(&mut self.grid.colors);
             self.erased_lines = self.grid.next.erase_lines(&mut self.grid.colors);
             
             if !self.erased_lines.is_empty() {
                 //init
-                self.now_erase = now;
                 self.erase_flag = true;
+                self.now_erase = now;
                 // TODO: call fn here : write effect in grid.rs
                 // the fn is also not implemented
+                // self.grid.set_effect_lines(self.erased_lines.clone());
+                self.grid.effect_lines = self.erased_lines.clone();
                 self.effect_check(now);
+                return false;
             } else {
-                // どこも消さないなら単に置くだけ
-                self.grid.next._place(&mut self.grid.colors);
+                // どこも消さないならなにもしない
+                return true;
             }
     }
 
     fn effect_check(&mut self, now: chrono::DateTime<chrono::Local>) {
         // erase が確定したときに呼ばれる
         // つまり、place_check内部からも呼ばれる
+        // 戻り値はミノを更新すべきかどうか呼ばれる
+        // つまり !effectの有無
         if now.timestamp_millis() - self.now_erase.timestamp_millis() > Self::LINES_ERASE_DELTA {
             // effect終了
             self.erase_flag = false;
             self.erased_lines = Vec::new();
+            self.grid.clear_effect_lines();
+            self.grid.next.erase(&mut self.grid.colors);
+
+            self.next_mino();
+            println!("effect end");
             // TODO: clear the Vector in grid which is for effect
         } else {
-            self.grid.effect_lines(&self.erased_lines, 8); // 8 is black
+            // self.grid.set_effect_lines(self.erased_lines);
+            self.grid.effect_lines = self.erased_lines.clone();
         }
+    }
+
+    fn next_mino(&mut self) {
+        // effectから次のminoへうつるときに呼ばれる
+        self.grid.next = self.grid.get_mino();
+        self.place_flag = false;
     }
 
     fn hard_drop(&mut self, now: chrono::DateTime<chrono::Local>) {
@@ -187,9 +206,9 @@ impl Lienzo {
             self.place_flag = true;
             while self.grid.next.drop(&self.grid.colors) { //落ちてる間はtrue
             }
-            self.effect_init_place(now);
-            self.grid.next = self.grid.get_mino();
-            self.place_flag = false;
+            if self.effect_init_place(now) {
+                self.next_mino();
+            }
         }
         self.hard_drop_flag = false;
     }
@@ -245,7 +264,6 @@ impl Application for Lienzo {
                 now_erase: chrono::Local::now(),
                 erase_flag: false,
                 erased_lines: Vec::new(),
-                buffered_lines: Vec::new(),
             },
             Command::none(),
         )
@@ -269,6 +287,7 @@ impl Application for Lienzo {
                     } else {
                         self.hard_drop(local_time);
                     }
+                } else {
                 }
             },
             Message::EventOccurred(event) => {
@@ -366,6 +385,8 @@ impl Application for Lienzo {
         let mut grid = Grid::default();
         grid.colors = self.grid.colors.clone();
         grid.next = self.grid.next.clone();
+        // NOTE: This call needs to satisfy syn
+        grid.effect_lines = self.grid.effect_lines.clone();
         let canvas: Canvas<Message, Grid> = Canvas::new(
             // TODO: check which is better, self.grid.clone() or this below
             grid
