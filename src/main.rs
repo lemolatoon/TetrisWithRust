@@ -187,7 +187,6 @@ impl Lienzo {
             self.grid.next.erase(&mut self.grid.colors);
 
             self.next_mino();
-            println!("effect end");
             // TODO: clear the Vector in grid which is for effect
         } else {
             // self.grid.set_effect_lines(self.erased_lines);
